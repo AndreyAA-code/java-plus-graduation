@@ -7,6 +7,24 @@ client:
 spring:
   datasource:
     driverClassName: org.postgresql.Driver
-    url: jdbc:postgresql://localhost:6642/main
-    username: main
-    password: main
+    url: jdbc:postgresql://localhost:6542/ewm
+    username: ewm
+    password: ewm
+
+  jpa:
+    show-sql: true
+    hibernate:
+    ddl-auto: update
+
+  sql:
+    init:
+      mode: always
+      schema-locations: classpath:schema.sql
+
+  logging:
+    level.org.springframework:
+      orm.jpa: INFO
+      orm.jpa.JpaTransactionManager: INFO
+      transaction: INFO
+      transaction.interceptor: TRACE
+      ru.practicum: DEBUG

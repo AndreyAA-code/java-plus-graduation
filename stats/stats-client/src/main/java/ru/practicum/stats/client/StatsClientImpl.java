@@ -8,26 +8,37 @@ import org.springframework.web.util.UriComponentsBuilder;
 import ru.practicum.dto.EndpointHitDto;
 import ru.practicum.dto.ViewStatsDto;
 
+import java.net.URI;
 import java.net.URLEncoder;
 import java.nio.charset.StandardCharsets;
+import java.time.LocalDateTime;
+import java.time.format.DateTimeFormatter;
 import java.util.Arrays;
 import java.util.List;
+
+import static ru.practicum.dto.Const.TIMESTAMP_PATTERN;
 
 @Component
 public class StatsClientImpl implements StatsClient {
 
     private final RestClient restClient;
+    private final String serverUrl;
+    private final DateTimeFormatter formatter = DateTimeFormatter.ofPattern(TIMESTAMP_PATTERN);
 
-    public StatsClientImpl(@Value("${stats-server.url}") String serverUrl) {
-        this.restClient = RestClient.builder()
-                .baseUrl(serverUrl)
-                .build();
+    public StatsClientImpl(@Value("${server.url:http://localhost:9090}") String serverUrl) {
+        this.restClient = RestClient.create();
+        this.serverUrl = serverUrl;
     }
 
     @Override
     public void hit(EndpointHitDto hit) {
+        String uri = UriComponentsBuilder.newInstance()
+                .uri(URI.create(serverUrl))
+                .path("/hit")
+                .toUriString();
+
         restClient.post()
-                .uri("/hit")
+                .uri(uri)
                 .contentType(MediaType.APPLICATION_JSON)
                 .body(hit)
                 .retrieve()
@@ -35,23 +46,22 @@ public class StatsClientImpl implements StatsClient {
     }
 
     @Override
-    public List<ViewStatsDto> getStats(String start,
-                                       String end,
+    public List<ViewStatsDto> getStats(LocalDateTime start,
+                                       LocalDateTime end,
                                        List<String> uris,
                                        boolean unique
     ) {
-        UriComponentsBuilder uriBuilder = UriComponentsBuilder
-                .fromPath("/stats")
-                .queryParam("start", encode(start))
-                .queryParam("end", encode(end))
-                .queryParam("unique", unique);
-
-        if (uris != null && !uris.isEmpty()) {
-            uris.forEach(uri -> uriBuilder.queryParam("uris", uri));
-        }
+        String uriWithParams = UriComponentsBuilder.newInstance()
+                .uri(URI.create(serverUrl))
+                .path("/stats")
+                .queryParam("start", start.format(formatter))
+                .queryParam("end", end.format(formatter))
+                .queryParam("uris", uris)
+                .queryParam("unique", unique)
+                .toUriString();
 
         ViewStatsDto[] response = restClient.get()
-                .uri(uriBuilder.toUriString())
+                .uri(uriWithParams)
                 .retrieve()
                 .body(ViewStatsDto[].class);
 

@@ -5,20 +5,14 @@ import lombok.extern.slf4j.Slf4j;
 import org.apache.coyote.BadRequestException;
 import org.springframework.http.HttpStatus;
 import org.springframework.web.bind.MethodArgumentNotValidException;
-import org.springframework.web.bind.annotation.ControllerAdvice;
-import org.springframework.web.bind.annotation.ExceptionHandler;
-import org.springframework.web.bind.annotation.ResponseStatus;
+import org.springframework.web.bind.MissingServletRequestParameterException;
+import org.springframework.web.bind.annotation.*;
 
-@ControllerAdvice
+import java.time.format.DateTimeParseException;
+
+@RestControllerAdvice
 @Slf4j
 public class ErrorHandler {
-
-    @ExceptionHandler
-    @ResponseStatus(HttpStatus.INTERNAL_SERVER_ERROR)
-    public ErrorResponse handleException(Exception e) {
-       log.info("500 {}", e.getMessage(), e);
-       return new ErrorResponse(e.getMessage());
-    }
 
     @ExceptionHandler(MethodArgumentNotValidException.class)
     @ResponseStatus(HttpStatus.BAD_REQUEST)
@@ -40,5 +34,35 @@ public class ErrorHandler {
         log.info("400 Bad Request: {}", e.getMessage(), e);
         return new ErrorResponse(e.getMessage());
     }
+
+    @ExceptionHandler(TimeRangeException.class)
+    @ResponseStatus(HttpStatus.BAD_REQUEST)
+    public ErrorResponse handleTimeRangeException(TimeRangeException e) {
+        log.info("400 Bad Request: {}", e.getMessage(), e);
+        return new ErrorResponse(e.getMessage());
+    }
+
+    @ExceptionHandler(DateTimeParseException.class)
+    @ResponseStatus(HttpStatus.BAD_REQUEST)
+    public ErrorResponse handleDateTimeParseException(DateTimeParseException e) {
+        log.info("400 Bad Request: Invalid date format. {}", e.getMessage(), e);
+        return new ErrorResponse("Invalid date format. Expected: yyyy-MM-dd HH:mm:ss");
+    }
+
+    @ExceptionHandler(MissingServletRequestParameterException.class)
+    @ResponseStatus(HttpStatus.BAD_REQUEST)
+    @ResponseBody
+    public ErrorResponse handleMissingParamException(MissingServletRequestParameterException e) {
+        log.info("400 Bad Request: Missing required parameter '{}'", e.getParameterName());
+        return new ErrorResponse("Required parameter '" + e.getParameterName() + "' is not present");
+    }
+
+    @ExceptionHandler
+    @ResponseStatus(HttpStatus.INTERNAL_SERVER_ERROR)
+    public ErrorResponse handleException(Exception e) {
+        log.info("500 {}", e.getMessage(), e);
+        return new ErrorResponse(e.getMessage());
+    }
+
 
 }
