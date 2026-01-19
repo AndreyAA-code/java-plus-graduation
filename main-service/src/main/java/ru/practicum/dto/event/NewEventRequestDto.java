@@ -30,7 +30,7 @@ public class NewEventRequestDto {
     @JsonFormat(pattern = TIMESTAMP_PATTERN)
     private LocalDateTime eventDate;
 
-    private LocationDto location;
+    private LatLonDto location;
 
     @NotBlank
     private String title;

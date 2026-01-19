@@ -33,7 +33,7 @@ public class EventResponseDto {
 
     private UserShortDto initiator;
 
-    private LocationDto location;
+    private LatLonDto location;
 
     private Boolean paid;
 

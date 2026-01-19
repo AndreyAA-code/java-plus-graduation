@@ -23,7 +23,7 @@ public class ShortEventResponseDto {
 
     private UserShortDto initiator;
 
-    private LocationDto location;
+    private LatLonDto location;
 
     private Boolean paid;
 

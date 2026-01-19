@@ -7,7 +7,7 @@ import lombok.Data;
 
 @Data
 @Builder
-public class LocationDto {
+public class LatLonDto {
     @NotNull
     @Positive
     private double lat;
