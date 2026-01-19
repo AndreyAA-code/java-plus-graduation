@@ -1,7 +1,9 @@
 package ru.practicum.model;
 
 import jakarta.persistence.*;
+import jakarta.validation.constraints.NotBlank;
 import lombok.*;
+import org.hibernate.validator.constraints.Length;
 
 @Entity
 @Table(name = "categories",
@@ -16,6 +18,8 @@ public class Category {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
-    @Column(length = 50)
+    @Column
+    @NotBlank
+    @Length(max = 50)
     private String name;
 }

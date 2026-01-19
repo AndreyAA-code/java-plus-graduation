@@ -6,7 +6,7 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.http.HttpStatus;
 import org.springframework.web.bind.annotation.*;
-import ru.practicum.service.UserService;
+import ru.practicum.service.user.UserService;
 import ru.practicum.dto.user.NewUserRequestDto;
 import ru.practicum.dto.user.UserDto;
 

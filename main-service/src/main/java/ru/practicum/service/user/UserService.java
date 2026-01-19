@@ -1,4 +1,4 @@
-package ru.practicum.service;
+package ru.practicum.service.user;
 
 import org.springframework.data.domain.Pageable;
 import ru.practicum.dto.user.NewUserRequestDto;

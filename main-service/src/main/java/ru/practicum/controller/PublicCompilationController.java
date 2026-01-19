@@ -6,7 +6,7 @@ import org.springframework.data.domain.PageRequest;
 import org.springframework.http.HttpStatus;
 import org.springframework.web.bind.annotation.*;
 import ru.practicum.dto.compilation.CompilationDto;
-import ru.practicum.service.CompilationService;
+import ru.practicum.service.compilation.CompilationService;
 
 import java.util.List;
 

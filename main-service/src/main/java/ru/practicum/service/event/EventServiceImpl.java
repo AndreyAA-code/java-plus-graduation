@@ -14,21 +14,17 @@ import ru.practicum.dto.ViewStatsDto;
 import ru.practicum.dto.event.*;
 import ru.practicum.error.ConflictException;
 import ru.practicum.mapper.EventMapper;
-import ru.practicum.model.Category;
-import ru.practicum.model.Event;
-import ru.practicum.model.QEvent;
-import ru.practicum.model.User;
+import ru.practicum.model.*;
 import ru.practicum.repository.CategoryRepository;
 import ru.practicum.repository.EventRepository;
+import ru.practicum.repository.LocationRepository;
 import ru.practicum.repository.UserRepository;
 import ru.practicum.util.EventState;
 import ru.practicum.util.EventStateAction;
 import ru.practicum.stats.client.StatsClient;
 
 import java.time.LocalDateTime;
-import java.util.ArrayList;
-import java.util.List;
-import java.util.NoSuchElementException;
+import java.util.*;
 import java.util.stream.Collectors;
 
 @Slf4j
@@ -40,6 +36,7 @@ public class EventServiceImpl implements EventService {
     private final CategoryRepository categoryRepository;
     private final EventRepository eventRepository;
     private final UserRepository userRepository;
+    private final LocationRepository locationRepository;
     private final StatsClient statsClient;
 
     @Override
@@ -193,6 +190,73 @@ public class EventServiceImpl implements EventService {
                 .collect(Collectors.toList());
     }
 
+    //!!!!!!!!FEATURE - 3 ЗАДАНИЕ
+
+    @Override
+    public List<ShortEventResponseDto> findEventsByLocation(Long locationId, Pageable pageable) {
+        log.info("Finding events for location id: {}", locationId);
+
+        Location location = locationRepository.findById(locationId)
+                .orElseThrow(() -> new NoSuchElementException("Location with id " + locationId + " not found"));
+
+        List<Event> events = eventRepository.findEventsWithinLocationRadius(
+                location.getLatitude(),
+                location.getLongitude(),
+                location.getRadius() != null ? location.getRadius() : 1.0,
+                pageable
+        );
+
+        log.info("Found {} events for location id: {} (center: lat={}, lon={}, radius={}km)",
+                events.size(), locationId, location.getLatitude(), location.getLongitude(),
+                location.getRadius() != null ? location.getRadius() : 1.0);
+
+        return events.stream()
+                .map(event -> {
+                    Long views = getViews(event.getId());
+                    ShortEventResponseDto dto = mapper.eventToShortEventResponseDto(event, event.getInitiator());
+                    dto.setViews(views);
+                    return dto;
+                })
+                .collect(Collectors.toList());
+    }
+
+    @Override
+    public List<ShortEventResponseDto> findEventsNear(Double lat, Double lon, Double radius, Pageable pageable) {
+        log.info("Finding events for user at coordinates: lat={}, lon={}, radius={}km", lat, lon, radius);
+
+        validateCoordinatesAndRadius(lat, lon, radius);
+
+        List<Location> userLocations = locationRepository.findLocationsContainingPoint(lat, lon);
+        if (userLocations.isEmpty()) {
+            log.info("User at coordinates lat={}, lon={} doesn't get at any location", lat, lon);
+            return Collections.emptyList();
+        }
+        log.info("User is in {} locations", userLocations.size());
+
+        Set<Event> allEvents = new HashSet<>();
+
+        for (Location location : userLocations) {
+            List<Event> eventsInLocation = eventRepository.findEventsWithinLocationRadius(
+                    location.getLatitude(),
+                    location.getLongitude(),
+                    location.getRadius() != null ? location.getRadius() : 1.0,
+                    pageable
+            );
+            allEvents.addAll(eventsInLocation);
+            log.info("Found {} events in location id: {}", eventsInLocation.size(), location.getId());
+        }
+        return allEvents.stream()
+                .map(event -> {
+                    Long views = getViews(event.getId());
+                    ShortEventResponseDto dto = mapper.eventToShortEventResponseDto(event, event.getInitiator());
+                    dto.setViews(views);
+                    return dto;
+                })
+                .collect(Collectors.toList());
+
+    }
+    //!!!!!!!!FEATURE - 3 ЗАДАНИЕ
+
     @Override
     @Transactional
     public AdminEventResponseDto updateAdminEvent(Long eventId, UpdateEventAdminRequest req) {
@@ -295,6 +359,21 @@ public class EventServiceImpl implements EventService {
     private void checkPermission(Event event, User user) {
         if (!event.getInitiator().equals(user)) {
             throw new ResourceAccessException("Access to event " + event + " forbidden");
+        }
+    }
+
+    private void validateCoordinatesAndRadius(Double lat, Double lon, Double radius) {
+        if (lat == null || lon == null) {
+            throw new IllegalArgumentException("Latitude and longitude are required");
+        }
+        if (lat < -90.0 || lat > 90.0) {
+            throw new IllegalArgumentException("Latitude must be between -90 and 90 degrees");
+        }
+        if (lon < -180.0 || lon > 180.0) {
+            throw new IllegalArgumentException("Longitude must be between -180 and 180 degrees");
+        }
+        if (radius == null || radius <= 0) {
+            throw new IllegalArgumentException("Radius must be positive");
         }
     }
 

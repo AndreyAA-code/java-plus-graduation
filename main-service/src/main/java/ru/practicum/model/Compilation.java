@@ -1,7 +1,9 @@
 package ru.practicum.model;
 
 import jakarta.persistence.*;
+import jakarta.validation.constraints.NotBlank;
 import lombok.*;
+import org.hibernate.validator.constraints.Length;
 
 import java.util.Set;
 
@@ -18,7 +20,9 @@ public class Compilation {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
-    @Column(length = 50)
+    @Column
+    @Length(max = 50)
+    @NotBlank
     private String title;
 
     @Column

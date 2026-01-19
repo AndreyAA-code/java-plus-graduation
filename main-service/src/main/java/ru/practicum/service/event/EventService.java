@@ -26,4 +26,9 @@ public interface EventService {
     List<AdminEventResponseDto> findAdminEvents(List<Long> users, List<EventState> states,
                                                 List<Long> categories, LocalDateTime rangeStart,
                                                 LocalDateTime rangeEnd, Pageable pageable);
+
+    List<ShortEventResponseDto> findEventsByLocation(Long locationId, Pageable pageable);
+
+    List<ShortEventResponseDto> findEventsNear(Double lat, Double lon, Double radius, Pageable pageable);
+
 }
