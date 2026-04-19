@@ -1,7 +1,12 @@
 package ru.practicum.stats.client;
 
 import org.springframework.beans.factory.annotation.Value;
+import org.springframework.cloud.client.ServiceInstance;
+import org.springframework.cloud.client.discovery.DiscoveryClient;
 import org.springframework.http.MediaType;
+import org.springframework.retry.backoff.FixedBackOffPolicy;
+import org.springframework.retry.policy.MaxAttemptsRetryPolicy;
+import org.springframework.retry.support.RetryTemplate;
 import org.springframework.stereotype.Component;
 import org.springframework.web.client.RestClient;
 import org.springframework.web.util.UriComponentsBuilder;
@@ -21,21 +26,52 @@ import static ru.practicum.dto.Const.TIMESTAMP_PATTERN;
 @Component
 public class StatsClientImpl implements StatsClient {
 
+    private final DiscoveryClient discoveryClient;
     private final RestClient restClient;
-    private final String serverUrl;
+    private final String statsServiceId;
+    private final RetryTemplate retryTemplate;
     private final DateTimeFormatter formatter = DateTimeFormatter.ofPattern(TIMESTAMP_PATTERN);
 
-    public StatsClientImpl(@Value("${server.url:http://localhost:9090}") String serverUrl) {
+    public StatsClientImpl(DiscoveryClient discoveryClient, @Value("${stats.service.id:statistics-service}") String statsServiceId) {
+        this.discoveryClient = discoveryClient;
         this.restClient = RestClient.create();
-        this.serverUrl = serverUrl;
+        this.statsServiceId = statsServiceId;
+        this.retryTemplate = createRetryTemplate();
+    }
+
+    private ServiceInstance getInstance() {
+        try {
+            return discoveryClient
+                    .getInstances(statsServiceId)
+                    .getFirst();
+        } catch (Exception exception) {
+            throw new StatsServerUnavailable(
+                    "Ошибка обнаружения адреса сервиса статистики с id: " + statsServiceId
+            );
+        }
+    }
+
+    private RetryTemplate createRetryTemplate() {
+        RetryTemplate retryTemplate = new RetryTemplate();
+
+        FixedBackOffPolicy fixedBackOffPolicy = new FixedBackOffPolicy();
+        fixedBackOffPolicy.setBackOffPeriod(3000L);
+        retryTemplate.setBackOffPolicy(fixedBackOffPolicy);
+
+        MaxAttemptsRetryPolicy retryPolicy = new MaxAttemptsRetryPolicy();
+        retryPolicy.setMaxAttempts(3);
+        retryTemplate.setRetryPolicy(retryPolicy);
+        return retryTemplate;
+    }
+
+    private URI makeUri(String path) {
+        ServiceInstance instance = retryTemplate.execute(cxt -> getInstance());
+        return URI.create("http://" + instance.getHost() + ":" + instance.getPort() + path);
     }
 
     @Override
     public void hit(EndpointHitDto hit) {
-        String uri = UriComponentsBuilder.newInstance()
-                .uri(URI.create(serverUrl))
-                .path("/hit")
-                .toUriString();
+        URI uri = makeUri("/hit");
 
         restClient.post()
                 .uri(uri)
@@ -51,15 +87,16 @@ public class StatsClientImpl implements StatsClient {
                                        List<String> uris,
                                        boolean unique
     ) {
-        String uriWithParams = UriComponentsBuilder.newInstance()
-                .uri(URI.create(serverUrl))
-                .path("/stats")
+        URI baseUri = makeUri("/stats");
+        UriComponentsBuilder builder = UriComponentsBuilder.fromUri(baseUri)
                 .queryParam("start", start.format(formatter))
                 .queryParam("end", end.format(formatter))
-                .queryParam("uris", uris)
-                .queryParam("unique", unique)
-                .toUriString();
+                .queryParam("unique", unique);
+        if (uris != null && !uris.isEmpty()) {
+            builder.queryParam("uris", uris);
+        }
 
+        String uriWithParams = builder.toUriString();
         ViewStatsDto[] response = restClient.get()
                 .uri(uriWithParams)
                 .retrieve()
