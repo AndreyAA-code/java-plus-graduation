@@ -1,5 +1,6 @@
 #!/bin/bash
 
+
 # Название: deploy.sh
 # Описание: Скрипт для последовательного выполнения команд Docker Compose и Maven
 # Запуск: ./deploy.sh
