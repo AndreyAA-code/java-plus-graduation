@@ -32,7 +32,7 @@ public class StatsClientImpl implements StatsClient {
     private final RetryTemplate retryTemplate;
     private final DateTimeFormatter formatter = DateTimeFormatter.ofPattern(TIMESTAMP_PATTERN);
 
-    public StatsClientImpl(DiscoveryClient discoveryClient, @Value("${stats.service.id:statistics-service}") String statsServiceId) {
+    public StatsClientImpl(DiscoveryClient discoveryClient, @Value("${stats.service.id:STATS-SERVER}") String statsServiceId) {
         this.discoveryClient = discoveryClient;
         this.restClient = RestClient.create();
         this.statsServiceId = statsServiceId;
