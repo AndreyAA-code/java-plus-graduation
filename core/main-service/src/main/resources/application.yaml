@@ -1,33 +1,18 @@
-server:
-  port: 0
-
-client:
-  url: http://localhost:9090
-
 spring:
-  datasource:
-    driverClassName: org.postgresql.Driver
-    url: jdbc:postgresql://localhost:6542/ewm
-    username: ewm
-    password: ewm
+  application:
+    name: main-service
+  config:
+    import: "configserver:"
+  cloud:
+    config:
+      discovery:
+        enabled: true
+        serviceId: config-server
+      fail-fast: true
+      retry:
+        useRandomPolicy: true
+        max-interval: 6000
 
-  jpa:
-    show-sql: true
-    hibernate:
-    ddl-auto: update
-
-  sql:
-    init:
-      mode: always
-      schema-locations: classpath:schema.sql
-
-  logging:
-    level.org.springframework:
-      orm.jpa: INFO
-      orm.jpa.JpaTransactionManager: INFO
-      transaction: INFO
-      transaction.interceptor: TRACE
-      ru.practicum: DEBUG
 
 eureka:
   instance:

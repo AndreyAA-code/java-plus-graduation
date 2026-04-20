@@ -1,13 +1,32 @@
-server:
-  port: 9090
-
 spring:
-  datasource:
-    driverClassName: org.h2.Driver
-    url: jdbc:h2:mem:stat
-    username: stats
-    password: stats
+  config:
+    import: ""
+  cloud:
+    config:
+      enabled: false
+      discovery:
+        enabled: false
 
-sql:
-    init:
-        schema-locations: classpath:schema.sql
+  datasource:
+    url: jdbc:h2:mem:testdb;MODE=PostgreSQL;DB_CLOSE_DELAY=-1
+    driver-class-name: org.h2.Driver
+    username: sa
+    password: password
+
+  jpa:
+    database-platform: org.hibernate.dialect.H2Dialect
+    hibernate:
+      ddl-auto: create-drop
+    show-sql: true
+
+eureka:
+  client:
+    enabled: false
+
+server:
+  port: 0
+
+logging:
+  level:
+    org.springframework: WARN
+    ru.practicum: DEBUG

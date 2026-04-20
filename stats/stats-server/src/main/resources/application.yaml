@@ -1,29 +1,24 @@
-server:
-  port: 0
-  url: http://localhost:9090
-
 spring:
-  datasource:
-    driverClassName: org.postgresql.Driver
-    url: jdbc:postgresql://localhost:6541/stats
-    username: stats
-    password: stats
-  jpa:
-    show-sql: true
-    hibernate:
-      ddl-auto: update
+  application:
+    name: stats-service
+  config:
+    import: "configserver:"
+  cloud:
+    config:
+      discovery:
+        enabled: true
+        serviceId: config-server
+      fail-fast: true
+      retry:
+        useRandomPolicy: true
+        max-interval: 6000
 
-sql:
-  init:
-    mode: always
-    schema-locations: classpath:schema.sql
-
-  eureka:
-    instance:
-      instance-id: ${spring.application.name}:${random.value}
-      prefer-ip-address: true
-      hostname: ${HOSTNAME:localhost}
-    client:
-      serviceUrl:
-        defaultZone: http://${eureka.instance.hostname:localhost}:${eureka.instance.port:8761}/eureka/
+eureka:
+  instance:
+    instance-id: ${spring.application.name}:${random.value}
+    prefer-ip-address: true
+    hostname: ${HOSTNAME:localhost}
+  client:
+    serviceUrl:
+      defaultZone: http://${eureka.instance.hostname:localhost}:${eureka.instance.port:8761}/eureka/
 
