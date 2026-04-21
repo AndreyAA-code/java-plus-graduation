@@ -1,0 +1,24 @@
+server:
+  port: 0
+
+spring:
+  application:
+    name: user-service
+  sql:
+    init:
+      mode: always
+      schema-locations: classpath:schema.sql
+  datasource:
+    driverClassName: "org.postgresql.Driver"
+    url: "jdbc:postgresql://localhost:6543/ewm"
+    username: "ewm"
+    password: "ewm"
+  jpa:
+    defer-datasource-initialization: true
+    hibernate:
+      ddl-auto: none
+    database-platform: org.hibernate.dialect.PostgreSQLDialect
+    properties:
+      hibernate:
+        default_schema: users
+        format_sql: true

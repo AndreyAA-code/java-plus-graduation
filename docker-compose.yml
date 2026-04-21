@@ -23,6 +23,11 @@ services:
       POSTGRES_PASSWORD: ewm
       POSTGRES_USER: ewm
       POSTGRES_DB: ewm
+
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+      - ./core/user-service/src/main/resources/schema.sql:/docker-entrypoint-initdb.d/01-user-service-schema.sql
+
     healthcheck:
       test: ["CMD", "pg_isready", "-q", "-d", "ewm", "-U", "ewm"]
       interval: 10s
