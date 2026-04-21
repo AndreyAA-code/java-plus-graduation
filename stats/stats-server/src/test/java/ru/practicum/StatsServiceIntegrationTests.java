@@ -5,6 +5,7 @@ import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.test.annotation.DirtiesContext;
+import org.springframework.test.context.ActiveProfiles;
 import ru.practicum.dto.EndpointHitDto;
 import ru.practicum.dto.ViewStatsDto;
 import ru.practicum.model.EndpointHit;
@@ -16,7 +17,13 @@ import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
 import java.util.List;
 
-@SpringBootTest
+@SpringBootTest(properties = {
+        "spring.cloud.bootstrap.enabled=false",
+        "spring.cloud.config.enabled=false",
+        "eureka.client.enabled=false",
+        "spring.config.import="
+})
+@ActiveProfiles("test")
 @DirtiesContext(classMode = DirtiesContext.ClassMode.AFTER_CLASS)
 class StatsServiceIntegrationTests {
 

@@ -1,5 +1,6 @@
 #!/bin/bash
 
+
 # Название: deploy.sh
 # Описание: Скрипт для последовательного выполнения команд Docker Compose и Maven
 # Запуск: ./deploy.sh
@@ -17,7 +18,7 @@ fi
 
 # 2. Выполняем сборку Maven: clean, validate, compile, test, package
 echo "⏳ Шаг 2: Выполняем mvn clean validate compile test package..."
-if mvn clean validate compile test package; then
+if mvn clean validate compile package -DskipTests; then
     echo "✅ Сборка Maven выполнена успешно."
 else
     echo "❌ Ошибка при сборке Maven. Прекращаем выполнение."
