@@ -1,6 +1,7 @@
 package ru.practicum.service.event;
 
 import com.querydsl.core.BooleanBuilder;
+import feign.FeignException;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.coyote.BadRequestException;
@@ -10,15 +11,17 @@ import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.client.ResourceAccessException;
+import ru.practicum.api.UserFeignClient;
 import ru.practicum.dto.ViewStatsDto;
 import ru.practicum.dto.event.*;
+import ru.practicum.dto.user.UserDto;
+import ru.practicum.dto.user.UserShortDto;
 import ru.practicum.error.ConflictException;
 import ru.practicum.mapper.EventMapper;
 import ru.practicum.model.*;
 import ru.practicum.repository.CategoryRepository;
 import ru.practicum.repository.EventRepository;
 import ru.practicum.repository.LocationRepository;
-import ru.practicum.repository.UserRepository;
 import ru.practicum.util.EventState;
 import ru.practicum.util.EventStateAction;
 import ru.practicum.stats.client.StatsClient;
@@ -35,9 +38,9 @@ public class EventServiceImpl implements EventService {
     private final EventMapper mapper;
     private final CategoryRepository categoryRepository;
     private final EventRepository eventRepository;
-    private final UserRepository userRepository;
     private final LocationRepository locationRepository;
     private final StatsClient statsClient;
+    private final UserFeignClient userFeignClient;
 
     @Override
     @Transactional
@@ -343,10 +346,17 @@ public class EventServiceImpl implements EventService {
     }
 
     private User findUser(Long userId) {
-        return userRepository.findById(userId)
-                .orElseThrow(() -> {
-                    return new NoSuchElementException("User with id " + userId + " notFound");
-                });
+        try {
+            UserShortDto userShortDto = userFeignClient.getUserById(userId);
+            return mapper.userDtoToUser(userShortDto);
+        } catch (FeignException e) {
+            if (e.status() == 404) {
+                throw new NoSuchElementException("User with id " + userId + " not found");
+            } else {
+                log.error("Error fetching user with id {}: {}", userId, e.getMessage());
+                throw new ResourceAccessException("Failed to fetch user with id: " + userId);
+            }
+        }
     }
 
     private Event findEvent(Long eventId) {

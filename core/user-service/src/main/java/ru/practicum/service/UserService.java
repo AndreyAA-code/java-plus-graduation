@@ -3,6 +3,7 @@ package ru.practicum.service;
 import org.springframework.data.domain.Pageable;
 import ru.practicum.dto.user.NewUserRequestDto;
 import ru.practicum.dto.user.UserDto;
+import ru.practicum.dto.user.UserShortDto;
 
 import java.util.List;
 
@@ -14,4 +15,5 @@ public interface UserService {
 
     void delete(Long userId);
 
+    UserShortDto getUserShort(Long userId);
 }

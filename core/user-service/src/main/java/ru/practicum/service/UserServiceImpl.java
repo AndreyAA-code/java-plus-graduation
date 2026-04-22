@@ -7,10 +7,10 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import ru.practicum.dto.user.NewUserRequestDto;
 import ru.practicum.dto.user.UserDto;
+import ru.practicum.dto.user.UserShortDto;
 import ru.practicum.mapper.UserMapper;
 import ru.practicum.model.User;
 import ru.practicum.repository.UserRepository;
-import ru.practicum.service.UserService;
 
 import java.util.List;
 import java.util.NoSuchElementException;
@@ -58,5 +58,12 @@ public class UserServiceImpl implements UserService {
         }
         userRepository.deleteById(userId);
         log.info("User with id: {} was deleted", userId);
+    }
+
+    @Override
+    public UserShortDto getUserShort(Long userId) {
+        User user = userRepository.findById(userId)
+                .orElseThrow(() -> new NoSuchElementException("User not found"));
+        return userMapper.userToUserShortDto(user);
     }
 }

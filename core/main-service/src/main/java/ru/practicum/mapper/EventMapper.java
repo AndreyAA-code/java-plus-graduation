@@ -2,6 +2,7 @@ package ru.practicum.mapper;
 
 import org.mapstruct.*;
 import ru.practicum.dto.event.*;
+import ru.practicum.dto.user.UserShortDto;
 import ru.practicum.model.Category;
 import ru.practicum.model.Event;
 import ru.practicum.model.User;
@@ -47,4 +48,9 @@ public interface EventMapper {
 
     @Mapping(target = "initiator", source = "event.initiator")
     AdminEventResponseDto toAdminEventFullDto(Event event);
+
+    @Mapping(source = "id", target = "id")
+    @Mapping(source = "name", target = "name")
+    @Mapping(source = "email", target = "email")
+    User userDtoToUser(UserShortDto userDto);
 }
