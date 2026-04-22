@@ -5,10 +5,9 @@ import ru.practicum.dto.event.*;
 import ru.practicum.dto.user.UserShortDto;
 import ru.practicum.model.Category;
 import ru.practicum.model.Event;
-import ru.practicum.model.User;
 
 @Mapper(componentModel = "spring",
-        uses = {CategoryMapper.class, UserMapper.class})
+        uses = {CategoryMapper.class})
 public interface EventMapper {
 
     @Mapping(target = "id", ignore = true)
@@ -17,8 +16,8 @@ public interface EventMapper {
     @Mapping(target = "state", expression = "java(ru.practicum.util.EventState.PENDING)")
     @Mapping(target = "createdOn", expression = "java(java.time.LocalDateTime.now())")
     @Mapping(target = "category", source = "category")
-    @Mapping(target = "initiator", source = "user")
-    Event eventRequestToEvent(NewEventRequestDto newEventRequest, Category category, User user);
+    @Mapping(target = "initiatorId", source = "userId")
+    Event eventRequestToEvent(NewEventRequestDto newEventRequest, Category category, long userId);
 
     @BeanMapping(nullValuePropertyMappingStrategy = NullValuePropertyMappingStrategy.IGNORE)
     @Mapping(target = "category", source = "category")
@@ -27,30 +26,20 @@ public interface EventMapper {
     @Mapping(target = "id", source = "event.id")
     @Mapping(target = "location.lat", source = "event.lat")
     @Mapping(target = "location.lon", source = "event.lon")
-    @Mapping(target = "initiator", source = "user")
-    @Mapping(target = "initiator.id", source = "user.id")
-    @Mapping(target = "initiator.name", source = "user.name")
-    ShortEventResponseDto eventToShortEventResponseDto(Event event, User user);
+    @Mapping(target = "initiator", source = "userDto")
+    ShortEventResponseDto eventToShortEventResponseDto(Event event, UserShortDto userDto);
 
     @Mapping(target = "id", source = "event.id")
     @Mapping(target = "location.lat", source = "event.lat")
     @Mapping(target = "location.lon", source = "event.lon")
-    @Mapping(target = "initiator", source = "event.initiator")
-    ShortEventResponseDto eventToShortEventResponseDto(Event event);
+    @Mapping(target = "initiator", source = "userDto")
+    EventResponseDto eventToEventResponseDto(Event event, UserShortDto userDto);
 
-    @Mapping(target = "id", source = "event.id")
+    @Mapping(target = "id", ignore = true)
+    @Mapping(target = "initiator", source = "userDto")
+    @Mapping(target = "category", source = "event.category")
     @Mapping(target = "location.lat", source = "event.lat")
     @Mapping(target = "location.lon", source = "event.lon")
-    @Mapping(target = "initiator", source = "user")
-    @Mapping(target = "initiator.id", source = "user.id")
-    @Mapping(target = "initiator.name", source = "user.name")
-    EventResponseDto eventToEventResponseDto(Event event, User user);
+    AdminEventResponseDto toAdminEventFullDto(Event event, UserShortDto userDto);
 
-    @Mapping(target = "initiator", source = "event.initiator")
-    AdminEventResponseDto toAdminEventFullDto(Event event);
-
-    @Mapping(source = "id", target = "id")
-    @Mapping(source = "name", target = "name")
-    @Mapping(source = "email", target = "email")
-    User userDtoToUser(UserShortDto userDto);
 }

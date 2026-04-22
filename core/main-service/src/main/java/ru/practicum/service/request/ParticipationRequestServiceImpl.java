@@ -5,17 +5,17 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.client.ResourceAccessException;
+import ru.practicum.api.UserFeignClient;
 import ru.practicum.dto.event.EventRequestStatusUpdateRequest;
 import ru.practicum.dto.event.EventRequestStatusUpdateResult;
 import ru.practicum.dto.request.ParticipationRequestDto;
+import ru.practicum.dto.user.UserShortDto;
 import ru.practicum.error.ConflictException;
 import ru.practicum.mapper.ParticipationRequestMapper;
 import ru.practicum.model.Event;
 import ru.practicum.model.ParticipationRequest;
-import ru.practicum.model.User;
 import ru.practicum.repository.EventRepository;
 import ru.practicum.repository.ParticipationRequestRepository;
-import ru.practicum.repository.UserRepository;
 import ru.practicum.util.EventState;
 import ru.practicum.util.ParticipationRequestStatus;
 
@@ -34,7 +34,7 @@ import java.util.stream.Collectors;
 public class ParticipationRequestServiceImpl implements ParticipationRequestService {
 
     private final ParticipationRequestRepository requestRepository;
-    private final UserRepository userRepository;
+    private final UserFeignClient userFeignClient;
     private final ParticipationRequestMapper requestMapper;
     private final EventRepository eventRepository;
 
@@ -43,17 +43,14 @@ public class ParticipationRequestServiceImpl implements ParticipationRequestServ
     public ParticipationRequestDto createRequest(Long userId, Long eventId) {
         log.info("Service trying to create request for user {} and event {}", userId, eventId);
 
-        User user = userRepository.findById(userId)
-                .orElseThrow(() -> {
-                    return new NoSuchElementException("User with id " + userId + "does not exist");
-                });
+        UserShortDto user = userFeignClient.getUserById(userId);
 
         Event event = eventRepository.findById(eventId)
                 .orElseThrow(() -> {
                     return new NoSuchElementException("Event with id " + eventId + "does not exist");
                 });
 
-        if (event.getInitiator().getId().equals(user.getId())) {
+        if (event.getInitiatorId().equals(userId)) {
             throw new ConflictException("User " + userId + " tries to create request for his own event " + eventId);
         }
 
@@ -72,8 +69,8 @@ public class ParticipationRequestServiceImpl implements ParticipationRequestServ
         }
 
         ParticipationRequest request = ParticipationRequest.builder()
-                .requester(user)
-                .event(event)
+                .requesterId(userId)
+                .eventId(eventId)
                 .created(Timestamp.valueOf(LocalDateTime.now()))
                 .status(ParticipationRequestStatus.PENDING)
                 .build();
@@ -92,10 +89,7 @@ public class ParticipationRequestServiceImpl implements ParticipationRequestServ
     @Override
     public List<ParticipationRequestDto> getOtherUsersEventsRequests(Long userId) {
         log.info("Service get requests for user {}", userId);
-        if (!userRepository.existsById(userId)) {
-            log.info("User {} does not exist", userId);
-            throw new NoSuchElementException("User does not exist");
-        }
+        userFeignClient.getUserById(userId);
         return requestRepository.findAllByRequesterId(userId)
                 .stream()
                 .map(requestMapper::mapToDto)
@@ -109,13 +103,13 @@ public class ParticipationRequestServiceImpl implements ParticipationRequestServ
         ParticipationRequest request = requestRepository.findById(requestId)
                 .orElseThrow(() -> new NoSuchElementException("Request with id " + requestId + " does not exist"));
 
-        if (!request.getRequester().getId().equals(userId)) {
-            throw new ConflictException("User " + userId + " tries to cancel requests not owned bu him");
+        if (!request.getRequesterId().equals(userId)) {
+            throw new ConflictException("User " + userId + " tries to cancel requests not owned by him");
         }
 
         if (request.getStatus() == ParticipationRequestStatus.CONFIRMED) {
-            Event event = eventRepository.findById(request.getEvent().getId())
-                    .orElseThrow(() -> new NoSuchElementException("Event with id " + request.getEvent().getId() + " does not exist"));
+            Event event = eventRepository.findById(request.getEventId())
+                    .orElseThrow(() -> new NoSuchElementException("Event with id " + request.getEventId() + " does not exist"));
 
             event.setConfirmedRequests(event.getConfirmedRequests() - 1);
             eventRepository.save(event);
@@ -133,7 +127,7 @@ public class ParticipationRequestServiceImpl implements ParticipationRequestServ
         Event event = eventRepository.findById(eventId)
                 .orElseThrow(() -> new NoSuchElementException("Event with id " + eventId + " does not exist"));
 
-        if (!Objects.equals(event.getInitiator().getId(), userId)) {
+        if (!Objects.equals(event.getInitiatorId(), userId)) {
             throw new ResourceAccessException("Запросы может просматривать только инициатор события");
         }
 
@@ -148,7 +142,7 @@ public class ParticipationRequestServiceImpl implements ParticipationRequestServ
     public EventRequestStatusUpdateResult updateRequestStatus(Long userId, Long eventId, EventRequestStatusUpdateRequest updateRequestStatus) {
         Event event = eventRepository.findById(eventId)
                 .orElseThrow(() -> new NoSuchElementException("Event with id " + eventId + " does not exist"));
-        if (!(Objects.equals(event.getInitiator().getId(), userId))) {
+        if (!(Objects.equals(event.getInitiatorId(), userId))) {
             throw new ResourceAccessException("Статус запросов может менять только инициатор события");
         }
 
@@ -158,7 +152,7 @@ public class ParticipationRequestServiceImpl implements ParticipationRequestServ
 
         List<ParticipationRequest> requests = requestRepository.findAllById(updateRequestStatus.getRequestIds());
         for (ParticipationRequest request : requests) {
-            if (!Objects.equals(request.getEvent().getId(), eventId)) {
+            if (!Objects.equals(request.getEventId(), eventId)) {
                 throw new ConflictException("There is no request with id " + request.getId() + " for event " + eventId);
             }
             if (request.getStatus() != ParticipationRequestStatus.PENDING) {

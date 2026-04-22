@@ -25,7 +25,7 @@ CREATE TABLE IF NOT EXISTS events (
     published_on TIMESTAMP,
     created_on TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
     category_id BIGINT REFERENCES categories,
-    user_id BIGINT REFERENCES users ON DELETE CASCADE,
+    initiator_id BIGINT,
     confirmed_requests INTEGER,
     CONSTRAINT chk_status CHECK (state IN ('PENDING', 'REJECTED', 'PUBLISHED', 'CANCELED'))
 );

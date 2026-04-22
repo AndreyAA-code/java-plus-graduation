@@ -73,9 +73,8 @@ public class Event {
     @Column(name = "published_on")
     private LocalDateTime publishedOn;
 
-    @ManyToOne
-    @JoinColumn(name = "user_id")
-    private User initiator;
+    @Column(name = "initiator_id")
+    private Long initiatorId;
 
     @ManyToOne
     @JoinColumn(name = "category_id")

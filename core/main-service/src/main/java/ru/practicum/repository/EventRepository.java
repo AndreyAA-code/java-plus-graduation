@@ -21,7 +21,7 @@ public interface EventRepository extends JpaRepository<Event, Long>, QuerydslPre
     Optional<Event> findByIdAndState(Long eventId, EventState stateAction);
 
     @Query("""
-            SELECT e FROM Event e WHERE (:users IS NULL OR e.initiator.id IN :users)
+            SELECT e FROM Event e WHERE (:users IS NULL OR e.initiatorId IN :users)
                AND (:states IS NULL OR e.state IN :states)
                AND (:categories IS NULL OR e.category.id IN :categories)
                AND e.eventDate >= COALESCE(:rangeStart, e.eventDate)

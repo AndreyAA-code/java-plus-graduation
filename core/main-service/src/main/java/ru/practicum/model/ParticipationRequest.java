@@ -21,13 +21,11 @@ public class ParticipationRequest {
 
     private Timestamp created;
 
-    @ManyToOne
-    @JoinColumn(name = "event_id", nullable = false)
-    private Event event;
+    @Column(name = "event_id", nullable = false)
+    private Long eventId;
 
-    @ManyToOne
-    @JoinColumn(name = "requester_id", nullable = false)
-    private User requester;
+    @Column(name = "requester_id", nullable = false)
+    private Long requesterId;
 
     @Enumerated(EnumType.STRING)
     private ParticipationRequestStatus status;

@@ -45,14 +45,14 @@ public class EventServiceImpl implements EventService {
     @Override
     @Transactional
     public EventResponseDto create(Long userId, NewEventRequestDto req) {
-        User user = findUser(userId);
+        UserShortDto user = findUser(userId);
 
         Category category = categoryRepository.findById(req.getCategory())
                 .orElseThrow(() -> {
                     return new NoSuchElementException("Category with id " + req.getCategory() + " notFound");
                 });
 
-        Event newEvent = mapper.eventRequestToEvent(req, category, user);
+        Event newEvent = mapper.eventRequestToEvent(req, category, userId);
 
         Event savedEvent = eventRepository.save(newEvent);
         log.info("Создано новое событие {} от пользователя {}", savedEvent, user);
@@ -68,8 +68,9 @@ public class EventServiceImpl implements EventService {
                 });
         log.info("Найдено событие {}", event);
 
+        UserShortDto user = findUser(event.getInitiatorId());
         Long views = getViews(eventId);
-        EventResponseDto res = mapper.eventToEventResponseDto(event, event.getInitiator());
+        EventResponseDto res = mapper.eventToEventResponseDto(event, user);
         res.setViews(views);
 
         return res;
@@ -77,18 +78,18 @@ public class EventServiceImpl implements EventService {
 
     @Override
     public EventResponseDto get(Long userId, Long eventId) {
-        User user = findUser(userId);
+        UserShortDto user = findUser(userId);
         Event event = findEvent(eventId);
 
         log.info("Найдено событие {}", event);
-        checkPermission(event, user);
+        checkPermission(event, userId);
 
         return mapper.eventToEventResponseDto(event, user);
     }
 
     @Override
     public List<ShortEventResponseDto> getAll(Long userId, Pageable pageable) {
-        User user = findUser(userId);
+        UserShortDto user = findUser(userId);
 
         return eventRepository.findAllByInitiatorId(userId, pageable)
                 .stream()
@@ -133,14 +134,17 @@ public class EventServiceImpl implements EventService {
         log.info("Найдены события: {}", events);
 
         return  events.stream()
-                .map(mapper::eventToShortEventResponseDto)
+                .map(event -> {
+                    UserShortDto user = findUser(event.getInitiatorId());
+                    return mapper.eventToShortEventResponseDto(event, user);
+                })
                 .toList();
     }
 
     @Override
     @Transactional
     public EventResponseDto update(Long userId, Long eventId, UpdateEventRequestDto req) {
-        User user = findUser(userId);
+        UserShortDto user = findUser(userId);
         Event event = findEvent(eventId);
 
         if (event.getState() == EventState.PUBLISHED) {
@@ -151,7 +155,7 @@ public class EventServiceImpl implements EventService {
             throw new ConflictException("Event could be changed only 2 hours before now");
         }
 
-        checkPermission(event, user);
+        checkPermission(event, userId);
         Category category = null;
 
         if (req.getCategory() != null) {
@@ -189,7 +193,10 @@ public class EventServiceImpl implements EventService {
                 users, states, categories, rangeStart, rangeEnd, pageable);
 
         return events.stream()
-                .map(mapper::toAdminEventFullDto)
+                .map(event -> {
+                    UserShortDto user = findUser(event.getInitiatorId());
+                    return mapper.toAdminEventFullDto(event, user);
+                })
                 .collect(Collectors.toList());
     }
 
@@ -216,7 +223,8 @@ public class EventServiceImpl implements EventService {
         return events.stream()
                 .map(event -> {
                     Long views = getViews(event.getId());
-                    ShortEventResponseDto dto = mapper.eventToShortEventResponseDto(event, event.getInitiator());
+                    UserShortDto user = findUser(event.getInitiatorId());
+                    ShortEventResponseDto dto = mapper.eventToShortEventResponseDto(event, user);
                     dto.setViews(views);
                     return dto;
                 })
@@ -251,7 +259,8 @@ public class EventServiceImpl implements EventService {
         return allEvents.stream()
                 .map(event -> {
                     Long views = getViews(event.getId());
-                    ShortEventResponseDto dto = mapper.eventToShortEventResponseDto(event, event.getInitiator());
+                    UserShortDto user = findUser(event.getInitiatorId());
+                    ShortEventResponseDto dto = mapper.eventToShortEventResponseDto(event, user);
                     dto.setViews(views);
                     return dto;
                 })
@@ -269,7 +278,8 @@ public class EventServiceImpl implements EventService {
         Event updatedEvent = updateEventByAdmin(event, req);
         log.info("Updated event: {}", updatedEvent);
 
-        return mapper.toAdminEventFullDto(updatedEvent);
+        UserShortDto user = findUser(updatedEvent.getInitiatorId());
+        return mapper.toAdminEventFullDto(updatedEvent, user);
     }
 
     @Transactional
@@ -345,10 +355,9 @@ public class EventServiceImpl implements EventService {
         return event;
     }
 
-    private User findUser(Long userId) {
+    private UserShortDto findUser(Long userId) {
         try {
-            UserShortDto userShortDto = userFeignClient.getUserById(userId);
-            return mapper.userDtoToUser(userShortDto);
+            return userFeignClient.getUserById(userId);
         } catch (FeignException e) {
             if (e.status() == 404) {
                 throw new NoSuchElementException("User with id " + userId + " not found");
@@ -366,8 +375,8 @@ public class EventServiceImpl implements EventService {
                 });
     }
 
-    private void checkPermission(Event event, User user) {
-        if (!event.getInitiator().equals(user)) {
+    private void checkPermission(Event event, Long userId) {
+        if (!event.getInitiatorId().equals(userId)) {
             throw new ResourceAccessException("Access to event " + event + " forbidden");
         }
     }

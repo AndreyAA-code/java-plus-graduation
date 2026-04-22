@@ -4,13 +4,25 @@ server:
 spring:
   cloud:
     gateway:
-      discovery.locator.enabled: true
+      discovery:
+        locator:
+          enabled: true
+          lower-case-service-id: true
+
       routes:
+
+        - id: user-service-route
+          uri: lb://user-service
+          predicates:
+            - Path=/admin/users/**
+          filters:
+            - PrefixPath=/api/v1
+            - StripPrefix=0
+
         - id: main_service_route
           uri: lb://main-service
           predicates:
             - Path=/**
-
 management:
   endpoints:
     web:
