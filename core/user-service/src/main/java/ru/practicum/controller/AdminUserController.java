@@ -31,7 +31,9 @@ public class AdminUserController implements UserFeignClient {
    @Override
     public UserDto createUser(@Valid @RequestBody NewUserRequestDto userRequestDto) {
         log.info("Create new user {}", userRequestDto);
-        return userService.addUser(userRequestDto);
+        UserDto user =  userService.addUser(userRequestDto);
+        log.info("Created user {}", user);
+        return user;
     }
 
     @Override

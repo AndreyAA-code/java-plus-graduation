@@ -11,7 +11,7 @@ import java.util.List;
 
 @FeignClient(name = "user-service", fallback = UserFeignClientFallback.class)
 public interface UserFeignClient {
-    @GetMapping
+    @GetMapping("/api/v1/admin/users")
     @ResponseStatus(HttpStatus.OK)
     List<UserDto> getUsers(@RequestParam(required = false) List<Long> ids,
                            @RequestParam(defaultValue = "0") int from,
@@ -21,11 +21,11 @@ public interface UserFeignClient {
     @ResponseStatus(HttpStatus.CREATED)
     UserDto createUser(@RequestBody NewUserRequestDto userRequestDto);
 
-    @DeleteMapping("/{userId}")
+    @DeleteMapping("/api/v1/admin/users/{userId}")
     @ResponseStatus(HttpStatus.NO_CONTENT)
     void deleteUser(@PathVariable Long userId);
 
-    @GetMapping("/{userId}")
+    @GetMapping("/api/v1/admin/users/{userId}")
     @ResponseStatus(HttpStatus.OK)
     UserShortDto getUserById(@PathVariable Long userId);
 
