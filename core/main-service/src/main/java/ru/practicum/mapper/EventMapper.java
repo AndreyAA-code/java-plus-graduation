@@ -35,7 +35,7 @@ public interface EventMapper {
     @Mapping(target = "initiator", source = "userDto")
     EventResponseDto eventToEventResponseDto(Event event, UserShortDto userDto);
 
-    @Mapping(target = "id", ignore = true)
+    @Mapping(target = "id", source = "event.id")
     @Mapping(target = "initiator", source = "userDto")
     @Mapping(target = "category", source = "event.category")
     @Mapping(target = "location.lat", source = "event.lat")
