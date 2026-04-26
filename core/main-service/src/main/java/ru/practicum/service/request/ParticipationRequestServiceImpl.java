@@ -5,16 +5,17 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.client.ResourceAccessException;
+import ru.practicum.api.EventFeignClient;
 import ru.practicum.api.UserFeignClient;
-import ru.practicum.dto.event.EventRequestStatusUpdateRequest;
-import ru.practicum.dto.event.EventRequestStatusUpdateResult;
-import ru.practicum.dto.request.ParticipationRequestDto;
+import ru.practicum.dto.event.event.EventRequestStatusUpdateRequest;
+import ru.practicum.dto.event.event.EventRequestStatusUpdateResult;
+import ru.practicum.dto.event.event.EventResponseDto;
+import ru.practicum.dto.requests.ParticipationRequestDto;
 import ru.practicum.dto.user.UserShortDto;
-import ru.practicum.error.ConflictException;
+import ru.practicum.errors.ConflictException;
 import ru.practicum.mapper.ParticipationRequestMapper;
 import ru.practicum.model.Event;
 import ru.practicum.model.ParticipationRequest;
-import ru.practicum.repository.EventRepository;
 import ru.practicum.repository.ParticipationRequestRepository;
 import ru.practicum.util.EventState;
 import ru.practicum.util.ParticipationRequestStatus;
@@ -36,7 +37,7 @@ public class ParticipationRequestServiceImpl implements ParticipationRequestServ
     private final ParticipationRequestRepository requestRepository;
     private final UserFeignClient userFeignClient;
     private final ParticipationRequestMapper requestMapper;
-    private final EventRepository eventRepository;
+    private final EventFeignClient eventFeignClient;
 
     @Override
     @Transactional
@@ -45,12 +46,9 @@ public class ParticipationRequestServiceImpl implements ParticipationRequestServ
 
         UserShortDto user = userFeignClient.getUserById(userId);
 
-        Event event = eventRepository.findById(eventId)
-                .orElseThrow(() -> {
-                    return new NoSuchElementException("Event with id " + eventId + "does not exist");
-                });
+        EventResponseDto event = eventFeignClient.getEventById(eventId);
 
-        if (event.getInitiatorId().equals(userId)) {
+        if (event.getInitiator().getId().equals(userId)) {
             throw new ConflictException("User " + userId + " tries to create request for his own event " + eventId);
         }
 
@@ -78,7 +76,7 @@ public class ParticipationRequestServiceImpl implements ParticipationRequestServ
         if (event.getRequestModeration() == false || event.getParticipantLimit() == 0) {
             request.setStatus(ParticipationRequestStatus.CONFIRMED);
             event.setConfirmedRequests(event.getConfirmedRequests() + 1);
-            eventRepository.save(event);
+            eventFeignClient.incrementConfirmedRequests(eventId);
         }
         log.info("Event {} details: state={}, requestModeration={}, participantLimit={}, confirmedRequests={}",
                 eventId, event.getState(), event.getRequestModeration(),

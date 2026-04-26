@@ -2,7 +2,7 @@ package ru.practicum.model;
 
 import jakarta.persistence.*;
 import lombok.*;
-import ru.practicum.util.ParticipationRequestStatus;
+import ru.practicum.utils.ParticipationRequestStatus;
 
 import java.sql.Timestamp;
 
