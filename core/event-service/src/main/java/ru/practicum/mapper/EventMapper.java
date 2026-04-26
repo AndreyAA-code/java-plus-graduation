@@ -42,4 +42,15 @@ public interface EventMapper {
     @Mapping(target = "location.lon", source = "event.lon")
     AdminEventResponseDto toAdminEventFullDto(Event event, UserShortDto userDto);
 
+    @Mapping(target = "id", source = "event.id")
+    @Mapping(target = "location.lat", source = "event.lat")
+    @Mapping(target = "location.lon", source = "event.lon")
+    @Mapping(target = "initiator", ignore = true)
+    @Mapping(target = "confirmedRequests", source = "event.confirmedRequests")
+    @Mapping(target = "createdOn", source = "event.createdOn")
+    @Mapping(target = "eventDate", source = "event.eventDate")
+    @Mapping(target = "publishedOn", source = "event.publishedOn")
+    @Mapping(target = "state", source = "event.state")
+    @Mapping(target = "views", ignore = true)
+    EventResponseDto toResponseDto(Event event);
 }

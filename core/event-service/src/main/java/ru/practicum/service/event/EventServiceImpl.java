@@ -20,12 +20,14 @@ import ru.practicum.mapper.EventMapper;
 import ru.practicum.models.Category;
 import ru.practicum.models.Event;
 import ru.practicum.models.Location;
+import ru.practicum.models.QEvent;
 import ru.practicum.repository.CategoryRepository;
 import ru.practicum.repository.EventRepository;
 import ru.practicum.repository.LocationRepository;
 import ru.practicum.stats.client.StatsClient;
 import ru.practicum.util.EventState;
 import ru.practicum.util.EventStateAction;
+
 
 import java.time.LocalDateTime;
 import java.util.*;
@@ -363,7 +365,7 @@ public class EventServiceImpl implements EventService {
         Event event = eventRepository.findById(eventId)
                 .orElseThrow(() -> new NoSuchElementException("Event with id " + eventId + " does not exist"));
 
-        return eventMapper.toResponseDto(event);
+        return mapper.toResponseDto(event);
     }
 
     @Transactional

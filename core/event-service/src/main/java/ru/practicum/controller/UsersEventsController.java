@@ -10,7 +10,6 @@ import ru.practicum.api.RequestFeignClient;
 import ru.practicum.dto.event.event.*;
 import ru.practicum.dto.requests.ParticipationRequestDto;
 import ru.practicum.service.event.EventService;
-import ru.practicum.service.request.ParticipationRequestService;
 
 import java.util.List;
 

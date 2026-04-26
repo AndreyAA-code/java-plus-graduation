@@ -14,7 +14,6 @@ import ru.practicum.dto.requests.ParticipationRequestDto;
 import ru.practicum.dto.user.UserShortDto;
 import ru.practicum.errors.ConflictException;
 import ru.practicum.mapper.ParticipationRequestMapper;
-import ru.practicum.model.Event;
 import ru.practicum.model.ParticipationRequest;
 import ru.practicum.repository.ParticipationRequestRepository;
 import ru.practicum.util.EventState;
@@ -75,8 +74,7 @@ public class ParticipationRequestServiceImpl implements ParticipationRequestServ
 
         if (event.getRequestModeration() == false || event.getParticipantLimit() == 0) {
             request.setStatus(ParticipationRequestStatus.CONFIRMED);
-            event.setConfirmedRequests(event.getConfirmedRequests() + 1);
-            eventFeignClient.incrementConfirmedRequests(eventId);
+            eventFeignClient.updateConfirmedRequests(eventId, (long) event.getConfirmedRequests() + 1);
         }
         log.info("Event {} details: state={}, requestModeration={}, participantLimit={}, confirmedRequests={}",
                 eventId, event.getState(), event.getRequestModeration(),
@@ -106,11 +104,8 @@ public class ParticipationRequestServiceImpl implements ParticipationRequestServ
         }
 
         if (request.getStatus() == ParticipationRequestStatus.CONFIRMED) {
-            Event event = eventRepository.findById(request.getEventId())
-                    .orElseThrow(() -> new NoSuchElementException("Event with id " + request.getEventId() + " does not exist"));
-
-            event.setConfirmedRequests(event.getConfirmedRequests() - 1);
-            eventRepository.save(event);
+            EventResponseDto event = eventFeignClient.getEventById(request.getEventId());
+            eventFeignClient.updateConfirmedRequests(request.getEventId(),(long)  event.getConfirmedRequests() - 1);
         }
 
         request.setStatus(ParticipationRequestStatus.CANCELED);
@@ -122,10 +117,9 @@ public class ParticipationRequestServiceImpl implements ParticipationRequestServ
     public List<ParticipationRequestDto> getUsersRequestsForUserEvent(Long userId, Long eventId) {
         log.info("Service get requests for user {} and event {}", userId, eventId);
 
-        Event event = eventRepository.findById(eventId)
-                .orElseThrow(() -> new NoSuchElementException("Event with id " + eventId + " does not exist"));
+        EventResponseDto event = eventFeignClient.getEventById(eventId);
 
-        if (!Objects.equals(event.getInitiatorId(), userId)) {
+        if (!Objects.equals(event.getInitiator().getId(), userId)) {
             throw new ResourceAccessException("Запросы может просматривать только инициатор события");
         }
 
@@ -138,9 +132,8 @@ public class ParticipationRequestServiceImpl implements ParticipationRequestServ
     @Transactional
     @Override
     public EventRequestStatusUpdateResult updateRequestStatus(Long userId, Long eventId, EventRequestStatusUpdateRequest updateRequestStatus) {
-        Event event = eventRepository.findById(eventId)
-                .orElseThrow(() -> new NoSuchElementException("Event with id " + eventId + " does not exist"));
-        if (!(Objects.equals(event.getInitiatorId(), userId))) {
+        EventResponseDto event = eventFeignClient.getEventById(eventId);
+        if (!(Objects.equals(event.getInitiator().getId(), userId))) {
             throw new ResourceAccessException("Статус запросов может менять только инициатор события");
         }
 
@@ -179,7 +172,7 @@ public class ParticipationRequestServiceImpl implements ParticipationRequestServ
                     rejectedRequests.add(requestMapper.mapToDto(request));
                 }
             }
-            event.setConfirmedRequests((int)(alreadyConfirmed + numberOfFreeSlots));
+            eventFeignClient.updateConfirmedRequests(eventId, alreadyConfirmed + numberOfFreeSlots);
 
         } else if (updateRequestStatus.getStatus() == ParticipationRequestStatus.REJECTED) {
             requests.forEach(request -> {
