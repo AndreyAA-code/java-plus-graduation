@@ -13,7 +13,7 @@ import java.util.Set;
 @AllArgsConstructor
 @Builder
 @Entity
-@Table(name = "compilations",
+@Table(name = "compilations",schema = "events",
         uniqueConstraints = @UniqueConstraint(name = "uq_compilation_name", columnNames = "title"))
 public class Compilation {
     @Id
@@ -31,6 +31,7 @@ public class Compilation {
     @ManyToMany
     @JoinTable(
             name = "compilation_events",
+            schema = "events",
             joinColumns = @JoinColumn(name = "compilation_id"),
             inverseJoinColumns = @JoinColumn(name = "event_id")
     )

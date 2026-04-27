@@ -6,7 +6,7 @@ import lombok.*;
 import org.hibernate.validator.constraints.Length;
 
 @Entity
-@Table(name = "categories",
+@Table(name = "categories", schema = "events",
         uniqueConstraints = @UniqueConstraint(name = "uq_category_name", columnNames = "name"))
 @Getter
 @Setter

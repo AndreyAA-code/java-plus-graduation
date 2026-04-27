@@ -19,6 +19,13 @@ spring:
             - PrefixPath=/api/v1
             - StripPrefix=0
 
+        - id: event-service-route
+          uri: lb://event-service
+          predicates:
+            - Path=/admin/events/**, /events/**, /users/*/events/**, /categories/**, /compilations/**
+          filters:
+             - StripPrefix=0
+
         - id: main_service_route
           uri: lb://main-service
           predicates:

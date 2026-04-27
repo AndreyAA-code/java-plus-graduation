@@ -9,7 +9,7 @@ import ru.practicum.util.EventState;
 import java.time.LocalDateTime;
 
 @Entity
-@Table(name = "events", schema = "public")
+@Table(name = "events", schema = "events")
 @Getter
 @Setter
 @Builder
