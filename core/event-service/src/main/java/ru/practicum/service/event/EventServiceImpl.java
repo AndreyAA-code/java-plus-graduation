@@ -11,6 +11,7 @@ import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.client.ResourceAccessException;
+import ru.practicum.api.LocationFeignClient;
 import ru.practicum.api.UserFeignClient;
 import ru.practicum.dto.ViewStatsDto;
 import ru.practicum.dto.event.event.*;
@@ -41,7 +42,7 @@ public class EventServiceImpl implements EventService {
     private final EventMapper mapper;
     private final CategoryRepository categoryRepository;
     private final EventRepository eventRepository;
-    private final LocationRepository locationRepository;
+    private final LocationFeignClient locationFeignClient;
     private final StatsClient statsClient;
     private final UserFeignClient userFeignClient;
 

@@ -18,6 +18,13 @@ spring:
           filters:
             - StripPrefix=0
 
+        - id: location-service-route
+          uri: lb://location-service
+          predicates:
+            - Path=/public/location/**, /admin/location/**
+          filters:
+             - StripPrefix=0
+
         - id: event-service-route
           uri: lb://event-service
           predicates:

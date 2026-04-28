@@ -5,7 +5,7 @@ import ru.practicum.dto.locations.LocationResponseDto;
 import ru.practicum.dto.locations.NewLocationDto;
 import ru.practicum.dto.locations.ShortLocationResponseDto;
 import ru.practicum.dto.locations.UpdateLocationDto;
-import ru.practicum.models.Location;
+import ru.practicum.model.Location;
 
 @Mapper(componentModel = "spring", nullValuePropertyMappingStrategy = NullValuePropertyMappingStrategy.IGNORE)
 public interface LocationMapper {

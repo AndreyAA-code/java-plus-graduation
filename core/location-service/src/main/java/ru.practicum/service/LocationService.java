@@ -1,4 +1,4 @@
-package ru.practicum.service.location;
+package ru.practicum.service;
 
 import org.springframework.data.domain.Pageable;
 import ru.practicum.dto.locations.LocationResponseDto;

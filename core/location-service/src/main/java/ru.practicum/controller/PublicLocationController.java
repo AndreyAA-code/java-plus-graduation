@@ -7,7 +7,7 @@ import org.springframework.data.domain.Sort;
 import org.springframework.http.HttpStatus;
 import org.springframework.web.bind.annotation.*;
 import ru.practicum.dto.locations.ShortLocationResponseDto;
-import ru.practicum.service.location.LocationService;
+import ru.practicum.service.LocationService;
 
 import java.util.List;
 

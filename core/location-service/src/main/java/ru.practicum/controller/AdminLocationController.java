@@ -10,7 +10,7 @@ import org.springframework.web.bind.annotation.*;
 import ru.practicum.dto.locations.LocationResponseDto;
 import ru.practicum.dto.locations.NewLocationDto;
 import ru.practicum.dto.locations.UpdateLocationDto;
-import ru.practicum.service.location.LocationService;
+import ru.practicum.service.LocationService;
 
 import java.util.List;
 

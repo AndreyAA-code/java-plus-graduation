@@ -1,4 +1,4 @@
-package ru.practicum.service.location;
+package ru.practicum.service;
 
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -10,7 +10,7 @@ import ru.practicum.dto.locations.NewLocationDto;
 import ru.practicum.dto.locations.ShortLocationResponseDto;
 import ru.practicum.dto.locations.UpdateLocationDto;
 import ru.practicum.mapper.LocationMapper;
-import ru.practicum.models.Location;
+import ru.practicum.model.Location;
 import ru.practicum.repository.LocationRepository;
 
 import java.util.List;
