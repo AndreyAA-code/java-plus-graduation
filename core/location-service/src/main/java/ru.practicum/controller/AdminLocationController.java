@@ -1,5 +1,6 @@
 package ru.practicum.controller;
 
+import jakarta.servlet.http.HttpServletRequest;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -32,9 +33,10 @@ public class AdminLocationController {
 
     @GetMapping("/{locationId}")
     @ResponseStatus(HttpStatus.OK)
-    public LocationResponseDto findByIdFull(@PathVariable Long locationId) {
+    public LocationResponseDto findByIdFull(@PathVariable Long locationId,
+                                            HttpServletRequest request) {
         log.info("Find location with id {}", locationId);
-        return locationService.findByIdFull(locationId);
+        return locationService.findByIdFull(locationId, request);
     }
 
     @PostMapping

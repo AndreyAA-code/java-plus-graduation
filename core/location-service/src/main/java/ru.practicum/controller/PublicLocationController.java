@@ -1,5 +1,6 @@
 package ru.practicum.controller;
 
+import jakarta.servlet.http.HttpServletRequest;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.data.domain.PageRequest;
@@ -21,9 +22,10 @@ public class PublicLocationController {
 
     @GetMapping("/{locationId}")
     @ResponseStatus(HttpStatus.OK)
-    public ShortLocationResponseDto findByIdShort(@PathVariable Long locationId) {
+    public ShortLocationResponseDto findByIdShort(@PathVariable Long locationId,
+                                                  HttpServletRequest request) {
         log.info("Find location with id {}", locationId);
-        return locationService.findByIdShort(locationId);
+        return locationService.findByIdShort(locationId, request);
     }
 
     @GetMapping
