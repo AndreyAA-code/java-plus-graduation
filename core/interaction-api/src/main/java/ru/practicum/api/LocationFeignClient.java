@@ -16,7 +16,7 @@ public interface LocationFeignClient {
     LocationResponseDto getLocationById(@PathVariable("id") Long id);
 
     @GetMapping("/internal/locations/search/near")
-    List<ShortLocationResponseDto> findLocationsNear(@RequestParam Double lat,
+    List<LocationResponseDto> findLocationsNear(@RequestParam Double lat,
                                                      @RequestParam Double lon,
                                                      @RequestParam Double radius);
 }

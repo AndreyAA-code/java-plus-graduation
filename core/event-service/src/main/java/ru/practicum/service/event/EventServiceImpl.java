@@ -15,16 +15,16 @@ import ru.practicum.api.LocationFeignClient;
 import ru.practicum.api.UserFeignClient;
 import ru.practicum.dto.ViewStatsDto;
 import ru.practicum.dto.event.event.*;
+import ru.practicum.dto.locations.LocationResponseDto;
+import ru.practicum.dto.locations.ShortLocationResponseDto;
 import ru.practicum.dto.user.UserShortDto;
 import ru.practicum.errors.ConflictException;
 import ru.practicum.mapper.EventMapper;
 import ru.practicum.models.Category;
 import ru.practicum.models.Event;
-import ru.practicum.models.Location;
 import ru.practicum.models.QEvent;
 import ru.practicum.repository.CategoryRepository;
 import ru.practicum.repository.EventRepository;
-import ru.practicum.repository.LocationRepository;
 import ru.practicum.stats.client.StatsClient;
 import ru.practicum.util.EventState;
 import ru.practicum.util.EventStateAction;
@@ -210,8 +210,7 @@ public class EventServiceImpl implements EventService {
     public List<ShortEventResponseDto> findEventsByLocation(Long locationId, Pageable pageable) {
         log.info("Finding events for location id: {}", locationId);
 
-        Location location = locationRepository.findById(locationId)
-                .orElseThrow(() -> new NoSuchElementException("Location with id " + locationId + " not found"));
+        LocationResponseDto location = locationFeignClient.getLocationById(locationId);
 
         List<Event> events = eventRepository.findEventsWithinLocationRadius(
                 location.getLatitude(),
@@ -241,7 +240,7 @@ public class EventServiceImpl implements EventService {
 
         validateCoordinatesAndRadius(lat, lon, radius);
 
-        List<Location> userLocations = locationRepository.findLocationsContainingPoint(lat, lon);
+        List<LocationResponseDto> userLocations = locationFeignClient.findLocationsNear(lat, lon, radius);
         if (userLocations.isEmpty()) {
             log.info("User at coordinates lat={}, lon={} doesn't get at any location", lat, lon);
             return Collections.emptyList();
@@ -250,7 +249,7 @@ public class EventServiceImpl implements EventService {
 
         Set<Event> allEvents = new HashSet<>();
 
-        for (Location location : userLocations) {
+        for (LocationResponseDto location : userLocations) {
             List<Event> eventsInLocation = eventRepository.findEventsWithinLocationRadius(
                     location.getLatitude(),
                     location.getLongitude(),
