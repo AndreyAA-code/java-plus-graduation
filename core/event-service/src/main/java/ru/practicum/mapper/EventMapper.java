@@ -51,6 +51,7 @@ public interface EventMapper {
     @Mapping(target = "eventDate", source = "event.eventDate")
     @Mapping(target = "publishedOn", source = "event.publishedOn")
     @Mapping(target = "state", source = "event.state")
-    @Mapping(target = "views", ignore = true)
+  //  @Mapping(target = "views", ignore = true)
     EventResponseDto toResponseDto(Event event);
+
 }

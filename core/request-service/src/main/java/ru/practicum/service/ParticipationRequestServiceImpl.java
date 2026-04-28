@@ -1,4 +1,4 @@
-package ru.practicum.service.request;
+package ru.practicum.service;
 
 import lombok.AllArgsConstructor;
 import lombok.extern.slf4j.Slf4j;

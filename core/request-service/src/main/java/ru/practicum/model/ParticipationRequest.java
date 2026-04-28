@@ -7,7 +7,7 @@ import ru.practicum.util.ParticipationRequestStatus;
 import java.sql.Timestamp;
 
 @Entity
-@Table (name = "participation_requests")
+@Table (name = "participation_requests", schema = "request")
 @Setter
 @Getter
 @Builder
