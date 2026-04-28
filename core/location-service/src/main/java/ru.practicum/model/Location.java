@@ -6,7 +6,7 @@ import lombok.*;
 import ru.practicum.util.LocationType;
 
 @Entity
-@Table(name = "locations", schema = "events")
+@Table(name = "location", schema = "location")
 @Getter
 @Setter
 @NoArgsConstructor

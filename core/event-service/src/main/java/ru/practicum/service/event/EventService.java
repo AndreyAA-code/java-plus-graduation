@@ -1,5 +1,6 @@
 package ru.practicum.service.event;
 
+import jakarta.servlet.http.HttpServletRequest;
 import org.springframework.data.domain.Pageable;
 import ru.practicum.dto.event.event.*;
 import ru.practicum.util.EventState;
@@ -15,7 +16,7 @@ public interface EventService {
 
     List<ShortEventResponseDto> getAll(Long userId, Pageable pageable);
 
-    EventResponseDto get(Long eventId);
+    EventResponseDto get(Long eventId, HttpServletRequest request);
 
     EventResponseDto get(Long userId, Long eventId);
 

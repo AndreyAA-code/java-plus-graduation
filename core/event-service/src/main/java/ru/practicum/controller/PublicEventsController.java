@@ -26,7 +26,7 @@ import java.util.List;
 @RequiredArgsConstructor
 public class PublicEventsController {
 
-    private static final String MAIN_SERVICE = "ewm-main-service";
+    private static final String MAIN_SERVICE = "event-service";
 
     private final EventService service;
     private final StatsClient statsClient;
@@ -44,8 +44,7 @@ public class PublicEventsController {
     @ResponseStatus(HttpStatus.OK)
     public EventResponseDto getEvent(@PathVariable Long id, HttpServletRequest req) {
         log.info("Get event by id {}", id);
-        EventResponseDto res = service.get(id);
-        saveHit(req);
+        EventResponseDto res = service.get(id, req);
         return res;
     }
 
@@ -82,7 +81,7 @@ public class PublicEventsController {
 
     private void saveHit(HttpServletRequest request) {
         EndpointHitDto endpointHitDto = new EndpointHitDto();
-        endpointHitDto.setApp(MAIN_SERVICE);
+        endpointHitDto.setApp("event-service");
         endpointHitDto.setUri(request.getRequestURI());
         endpointHitDto.setIp(request.getRemoteAddr());
         endpointHitDto.setTimestamp(LocalDateTime.now());

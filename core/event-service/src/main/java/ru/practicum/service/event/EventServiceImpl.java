@@ -2,6 +2,7 @@ package ru.practicum.service.event;
 
 import com.querydsl.core.BooleanBuilder;
 import feign.FeignException;
+import jakarta.servlet.http.HttpServletRequest;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.coyote.BadRequestException;
@@ -13,6 +14,7 @@ import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.client.ResourceAccessException;
 import ru.practicum.api.LocationFeignClient;
 import ru.practicum.api.UserFeignClient;
+import ru.practicum.dto.EndpointHitDto;
 import ru.practicum.dto.ViewStatsDto;
 import ru.practicum.dto.event.event.*;
 import ru.practicum.dto.locations.LocationResponseDto;
@@ -65,12 +67,14 @@ public class EventServiceImpl implements EventService {
     }
 
     @Override
-    public EventResponseDto get(Long eventId) {
+    public EventResponseDto get(Long eventId, HttpServletRequest request) {
         Event event = eventRepository.findByIdAndState(eventId, EventState.PUBLISHED)
                 .orElseThrow(() -> {
                     return new NoSuchElementException("Event with id " + eventId + " notFound");
                 });
         log.info("Найдено событие {}", event);
+
+        sendHit(eventId, request);
 
         UserShortDto user = findUser(event.getInitiatorId());
         Long views = getViews(eventId);
@@ -427,6 +431,22 @@ public class EventServiceImpl implements EventService {
                     .reduce(0L, Long::sum);
         } catch (Exception e) {
             return 0L;
+        }
+    }
+
+    private void sendHit(Long eventId, HttpServletRequest request) {
+        try {
+            EndpointHitDto hit = EndpointHitDto.builder()
+                    .app("event-service")  // важно: правильное имя сервиса
+                    .uri("/events/" + eventId)
+                    .ip(request.getRemoteAddr())
+                    .timestamp(LocalDateTime.now())
+                    .build();
+
+            statsClient.hit(hit);
+            log.info("Hit sent for event {}", eventId);
+        } catch (Exception e) {
+            log.error("Failed to send hit for event {}: {}", eventId, e.getMessage());
         }
     }
 }

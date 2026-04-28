@@ -6,8 +6,8 @@ import org.springframework.cloud.openfeign.EnableFeignClients;
 
 @SpringBootApplication
 @EnableFeignClients
-public class LocationService {
+public class LocationServiceStart {
     public static void main(String[] args) {
-        SpringApplication.run(LocationService.class, args);
+        SpringApplication.run(LocationServiceStart.class, args);
     }
 }
