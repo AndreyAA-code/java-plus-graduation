@@ -28,7 +28,7 @@ public class RequestsInternalController {
         return requestService.getUsersRequestsForUserEvent(userId, eventId);
     }
 
-    @PatchMapping
+    @PostMapping
     @ResponseStatus(HttpStatus.OK)
     public EventRequestStatusUpdateResult updateRequestStatus(
             @PathVariable Long userId,

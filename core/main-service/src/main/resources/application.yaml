@@ -12,6 +12,9 @@ spring:
       retry:
         useRandomPolicy: true
         max-interval: 6000
+  jackson:
+    date-format: yyyy-MM-dd HH:mm:ss
+    time-zone: UTC
 
 
 eureka:

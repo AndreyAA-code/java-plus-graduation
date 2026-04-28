@@ -45,7 +45,9 @@ public class ParticipationRequestServiceImpl implements ParticipationRequestServ
 
         UserShortDto user = userFeignClient.getUserById(userId);
 
+        log.info("Calling event-service for eventId={}", eventId);
         EventResponseDto event = eventFeignClient.getEventById(eventId);
+        log.info("Received event: {}", event);
 
         if (event.getInitiator().getId().equals(userId)) {
             throw new ConflictException("User " + userId + " tries to create request for his own event " + eventId);

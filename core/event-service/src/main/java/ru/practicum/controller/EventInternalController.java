@@ -22,7 +22,7 @@ public class EventInternalController {
         return eventService.getEventById(eventId);
     }
 
-    @PatchMapping("/{eventId}/confirmed")
+    @PostMapping("/{eventId}/confirmed")
     @ResponseStatus(HttpStatus.OK)
     public void updateConfirmedRequests(@PathVariable Long eventId,
                                         @RequestParam Long count) {

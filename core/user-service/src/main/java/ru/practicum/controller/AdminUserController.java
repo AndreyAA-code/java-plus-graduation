@@ -14,7 +14,7 @@ import ru.practicum.service.UserService;
 import java.util.List;
 
 @RestController
-@RequestMapping("/api/v1/admin/users")
+@RequestMapping({"/api/v1/admin/users", "/admin/users"})
 @Slf4j
 @RequiredArgsConstructor
 public class AdminUserController implements UserFeignClient {

@@ -361,11 +361,10 @@ public class EventServiceImpl implements EventService {
     @Override
     public EventResponseDto getEventById(Long eventId) {
         log.info("Getting event by id {} for internal use", eventId);
-
         Event event = eventRepository.findById(eventId)
                 .orElseThrow(() -> new NoSuchElementException("Event with id " + eventId + " does not exist"));
-
-        return mapper.toResponseDto(event);
+        UserShortDto user = findUser(event.getInitiatorId());
+        return mapper.eventToEventResponseDto(event, user);
     }
 
     @Transactional

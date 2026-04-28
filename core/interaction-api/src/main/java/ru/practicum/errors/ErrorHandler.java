@@ -78,4 +78,17 @@ public class ErrorHandler {
                 .timestamp(LocalDateTime.now())
                 .build();
     }
+
+    @ExceptionHandler(feign.FeignException.Conflict.class)
+    @ResponseStatus(HttpStatus.CONFLICT)
+    public ApiError handleFeignConflict(feign.FeignException.Conflict e) {
+        log.warn("Feign conflict: {}", e.getMessage(), e);
+        return ApiError.builder()
+                .status("CONFLICT")
+                .reason("Conflict from remote service")
+                .message(e.getMessage())
+                .errors(List.of())
+                .timestamp(LocalDateTime.now())
+                .build();
+    }
 }

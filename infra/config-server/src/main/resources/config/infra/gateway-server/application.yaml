@@ -14,15 +14,14 @@ spring:
         - id: user-service-route
           uri: lb://user-service
           predicates:
-            - Path=/admin/users/**
+            - Path=/api/v1/admin/users/**, /admin/users/**
           filters:
-            - PrefixPath=/api/v1
             - StripPrefix=0
 
         - id: event-service-route
           uri: lb://event-service
           predicates:
-            - Path=/admin/events/**, /events/**, /users/*/events/**, /categories/**, /compilations/**
+            - Path=/admin/events/**, /events/**, /users/*/events/**, /categories/**, /compilations/**, /admin/categories/**, /admin/compilations/**
           filters:
              - StripPrefix=0
 
