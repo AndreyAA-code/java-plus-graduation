@@ -7,7 +7,7 @@ import ru.practicum.models.Category;
 import ru.practicum.models.Event;
 
 @Mapper(componentModel = "spring",
-        uses = {CategoryMapper.class, LocationMapper.class})
+        uses = {CategoryMapper.class})
 public interface EventMapper {
 
     @Mapping(target = "id", ignore = true)

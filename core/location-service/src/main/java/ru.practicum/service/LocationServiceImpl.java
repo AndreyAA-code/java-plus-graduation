@@ -90,4 +90,21 @@ public class LocationServiceImpl implements LocationService {
                 });
         repository.deleteById(locationId);
     }
+
+    @Override
+    public LocationResponseDto findById(Long id) {
+        log.info("Find location by id {}", id);
+        Location location = repository.findById(id)
+                .orElseThrow(() -> new NoSuchElementException("Location with id " + id + " not found"));
+        return mapper.toFullResponseDto(location);
+    }
+
+    public List<ShortLocationResponseDto> findNear(Double lat, Double lon, Double radius) {
+        log.info("Finding locations near lat={}, lon={}, radius={} (parameter radius is ignored, using DB radius)", lat, lon, radius);
+
+        return repository.findLocationsContainingPoint(lat, lon)
+                .stream()
+                .map(mapper::toShortResponseDto)
+                .collect(Collectors.toList());
+    }
 }

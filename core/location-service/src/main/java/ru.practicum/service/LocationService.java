@@ -23,4 +23,8 @@ public interface LocationService {
     LocationResponseDto update(Long locationId, UpdateLocationDto dto);
 
     void delete(Long locationId);
+
+    LocationResponseDto findById(Long id);
+
+    List<ShortLocationResponseDto> findNear(Double lat, Double lon, Double radius);
 }
