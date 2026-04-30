@@ -37,14 +37,14 @@ public interface EventRepository extends JpaRepository<Event, Long>, QuerydslPre
     );
 
     @Query(value = """
-        SELECT e.* FROM events e
-        WHERE distance(:lat, :lon, e.lat, e.lon) <= :radius
+        SELECT e.* FROM events.events e
+        WHERE events.distance(:lat, :lon, e.lat, e.lon) <= :radius
         AND e.state = 'PUBLISHED'
         ORDER BY e.event_date ASC
         """,
             countQuery = """
-        SELECT COUNT(*) FROM events e
-        WHERE distance(:lat, :lon, e.lat, e.lon) <= :radius
+        SELECT COUNT(*) FROM events.events e
+        WHERE events.distance(:lat, :lon, e.lat, e.lon) <= :radius
         AND e.state = 'PUBLISHED'
         """,
             nativeQuery = true)

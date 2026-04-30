@@ -20,7 +20,7 @@ spring:
         - id: location-service-route
           uri: lb://location-service
           predicates:
-            - Path=/public/location/**, /admin/location/**
+            - Path=/public/location/**, /admin/location/**, /internal/locations/**
 
         - id: request-service-route
           uri: lb://request-service
