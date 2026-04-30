@@ -16,32 +16,22 @@ spring:
           predicates:
             - Path=/api/v1/admin/users/**, /admin/users/**
           filters:
-            - StripPrefix=0
 
         - id: location-service-route
           uri: lb://location-service
           predicates:
             - Path=/public/location/**, /admin/location/**
-          filters:
-             - StripPrefix=0
+
+        - id: request-service-route
+          uri: lb://request-service
+          predicates:
+            - Path=/internal/requests/**,/users/*/requests/**,/users/*/events/*/requests/**
 
         - id: event-service-route
           uri: lb://event-service
           predicates:
             - Path=/admin/events/**, /events/**, /users/*/events/**, /categories/**, /compilations/**, /admin/categories/**, /admin/compilations/**
-          filters:
-             - StripPrefix=0
 
-        - id: request-service-route
-          uri: lb://request-service
-          predicates:
-            - Path=/users/{userId}/requests/**, internal/users/{userId}/events/{eventId}/requests/**
-            - StripPrefix=0
-
-        - id: main_service_route
-          uri: lb://main-service
-          predicates:
-            - Path=/**
 management:
   endpoints:
     web:
