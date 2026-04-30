@@ -10,7 +10,7 @@ import ru.practicum.api.UserFeignClient;
 import ru.practicum.dto.event.event.EventRequestStatusUpdateRequest;
 import ru.practicum.dto.event.event.EventRequestStatusUpdateResult;
 import ru.practicum.dto.event.event.EventResponseDto;
-import ru.practicum.dto.requests.ParticipationRequestDto;
+import ru.practicum.dto.request.ParticipationRequestDto;
 import ru.practicum.dto.user.UserShortDto;
 import ru.practicum.errors.ConflictException;
 import ru.practicum.mapper.ParticipationRequestMapper;
