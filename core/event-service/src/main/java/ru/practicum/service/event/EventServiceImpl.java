@@ -1,7 +1,6 @@
 package ru.practicum.service.event;
 
 import com.querydsl.core.BooleanBuilder;
-import feign.FeignException;
 import jakarta.servlet.http.HttpServletRequest;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -18,7 +17,6 @@ import ru.practicum.dto.EndpointHitDto;
 import ru.practicum.dto.ViewStatsDto;
 import ru.practicum.dto.event.event.*;
 import ru.practicum.dto.locations.LocationResponseDto;
-import ru.practicum.dto.locations.ShortLocationResponseDto;
 import ru.practicum.dto.user.UserShortDto;
 import ru.practicum.errors.ConflictException;
 import ru.practicum.mapper.EventMapper;

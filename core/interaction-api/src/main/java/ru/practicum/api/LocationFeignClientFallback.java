@@ -3,7 +3,6 @@ package ru.practicum.api;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Component;
 import ru.practicum.dto.locations.LocationResponseDto;
-import ru.practicum.dto.locations.ShortLocationResponseDto;
 
 import java.util.Collections;
 import java.util.List;
