@@ -243,35 +243,39 @@ public class EventServiceImpl implements EventService {
         log.info("Finding events for user at coordinates: lat={}, lon={}, radius={}km", lat, lon, radius);
 
         validateCoordinatesAndRadius(lat, lon, radius);
+        try {
+            List<LocationResponseDto> userLocations = locationFeignClient.findLocationsNear(lat, lon, radius);
+            if (userLocations.isEmpty()) {
+                log.info("User at coordinates lat={}, lon={} doesn't get at any location", lat, lon);
+                return Collections.emptyList();
+            }
+            log.info("User is in {} locations", userLocations.size());
 
-        List<LocationResponseDto> userLocations = locationFeignClient.findLocationsNear(lat, lon, radius);
-        if (userLocations.isEmpty()) {
-            log.info("User at coordinates lat={}, lon={} doesn't get at any location", lat, lon);
+            Set<Event> allEvents = new HashSet<>();
+
+            for (LocationResponseDto location : userLocations) {
+                List<Event> eventsInLocation = eventRepository.findEventsWithinLocationRadius(
+                        location.getLatitude(),
+                        location.getLongitude(),
+                        location.getRadius() != null ? location.getRadius() : 1.0,
+                        pageable
+                );
+                allEvents.addAll(eventsInLocation);
+                log.info("Found {} events in location id: {}", eventsInLocation.size(), location.getId());
+            }
+            return allEvents.stream()
+                    .map(event -> {
+                        Long views = getViews(event.getId());
+                        UserShortDto user = findUser(event.getInitiatorId());
+                        ShortEventResponseDto dto = mapper.eventToShortEventResponseDto(event, user);
+                        dto.setViews(views);
+                        return dto;
+                    })
+                    .collect(Collectors.toList());
+        } catch (Exception e) {
+            log.info("Error finding events in location: {}", e.getMessage());
             return Collections.emptyList();
         }
-        log.info("User is in {} locations", userLocations.size());
-
-        Set<Event> allEvents = new HashSet<>();
-
-        for (LocationResponseDto location : userLocations) {
-            List<Event> eventsInLocation = eventRepository.findEventsWithinLocationRadius(
-                    location.getLatitude(),
-                    location.getLongitude(),
-                    location.getRadius() != null ? location.getRadius() : 1.0,
-                    pageable
-            );
-            allEvents.addAll(eventsInLocation);
-            log.info("Found {} events in location id: {}", eventsInLocation.size(), location.getId());
-        }
-        return allEvents.stream()
-                .map(event -> {
-                    Long views = getViews(event.getId());
-                    UserShortDto user = findUser(event.getInitiatorId());
-                    ShortEventResponseDto dto = mapper.eventToShortEventResponseDto(event, user);
-                    dto.setViews(views);
-                    return dto;
-                })
-                .collect(Collectors.toList());
 
     }
     //!!!!!!!!FEATURE - 3 ЗАДАНИЕ
@@ -382,13 +386,12 @@ public class EventServiceImpl implements EventService {
     private UserShortDto findUser(Long userId) {
         try {
             return userFeignClient.getUserById(userId);
-        } catch (FeignException e) {
-            if (e.status() == 404) {
-                throw new NoSuchElementException("User with id " + userId + " not found");
-            } else {
-                log.error("Error fetching user with id {}: {}", userId, e.getMessage());
-                throw new ResourceAccessException("Failed to fetch user with id: " + userId);
-            }
+        } catch (Exception e) {
+            log.error("Failed to fetch user with id {}: {}. Returning default user.", userId, e.getMessage());
+            UserShortDto defaultUser = new UserShortDto();
+            defaultUser.setId(userId);
+            defaultUser.setName("Default User");
+            return defaultUser;
         }
     }
 

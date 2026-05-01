@@ -8,7 +8,7 @@ import ru.practicum.dto.request.ParticipationRequestDto;
 
 import java.util.List;
 
-@FeignClient(name = "main-service", fallback = RequestFeignClientFallback.class)
+@FeignClient(name = "request-service", fallback = RequestFeignClientFallback.class)
 public interface RequestFeignClient {
     @GetMapping("/internal/users/{userId}/events/{eventId}/requests")
     List<ParticipationRequestDto> getUsersRequestsForUserEvent(@PathVariable("userId") Long userId,
