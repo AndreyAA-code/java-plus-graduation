@@ -27,7 +27,7 @@ fi
 
 # 3. Собираем образы Docker на основе docker-compose.yml
 echo "⏳ Шаг 3: Выполняем docker-compose build..."
-if docker-compose build; then
+if docker-compose build --no-cache; then
     echo "✅ docker-compose build выполнен успешно."
 else
     echo "❌ Ошибка при выполнении docker-compose build. Прекращаем выполнение."

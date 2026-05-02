@@ -8,6 +8,9 @@ services:
       POSTGRES_PASSWORD: stats
       POSTGRES_USER: stats
       POSTGRES_DB: stats
+
+    volumes:
+      - stats_data:/var/lib/postgresql/data
     healthcheck:
       test: ["CMD", "pg_isready", "-q", "-d", "stats", "-U", "stats"]
       interval: 10s
@@ -23,8 +26,19 @@ services:
       POSTGRES_PASSWORD: ewm
       POSTGRES_USER: ewm
       POSTGRES_DB: ewm
+
+    volumes:
+      - ewm_data:/var/lib/postgresql/data
+      - ./core/user-service/src/main/resources/schema.sql:/docker-entrypoint-initdb.d/01-user-service-schema.sql
+
     healthcheck:
       test: ["CMD", "pg_isready", "-q", "-d", "ewm", "-U", "ewm"]
       interval: 10s
       timeout: 6s
       retries: 20
+
+volumes:
+  stats_data:
+    driver: local
+  ewm_data:
+    driver: local

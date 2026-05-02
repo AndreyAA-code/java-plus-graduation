@@ -25,3 +25,11 @@ spring:
       transaction: INFO
       transaction.interceptor: TRACE
       ru.practicum: DEBUG
+
+  feign:
+    client:
+      config:
+        default:
+          connectTimeout: 5000
+          readTimeout: 5000
+          loggerLevel: basic
