@@ -18,7 +18,8 @@
         <module>stats/stats-client</module>
 	    <module>infra</module>
 	    <module>core</module>
-	</modules>
+        <module>stats/serialization</module>
+    </modules>
 
     <groupId>ru.practicum</groupId>
 	<artifactId>explore-with-me</artifactId>
