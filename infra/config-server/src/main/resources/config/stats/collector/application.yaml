@@ -1,16 +1,9 @@
-# Kafka topics
 kafka:
-  topic:
-    hub: telemetry.hubs.v1
-    sensor: telemetry.sensors.v1
   bootstrap:
-    server: ${SPRING_KAFKA_BOOTSTRAP_SERVERS:localhost:9092}
+    servers: localhost:9092
+  topics:
+    stats-user-action-v1: stats.user-actions.v1
 
-# Server ports
-server:
-  port: 0
-
-# gRPC configuration
 grpc:
   server:
     port: 0
