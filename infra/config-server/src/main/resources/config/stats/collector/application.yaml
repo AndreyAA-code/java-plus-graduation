@@ -7,3 +7,10 @@ kafka:
 grpc:
   server:
     port: 0
+
+logging:
+  level:
+    ru.practicum: DEBUG
+
+server:
+  port: 0

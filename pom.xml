@@ -28,7 +28,7 @@
 		<spring-cloud.version>2023.0.3</spring-cloud.version>
 		<avro.version>1.11.3</avro.version>
 		<kafka-clients.version>3.6.1</kafka-clients.version>
-		<protobuf.version>3.23.4</protobuf.version>
+		<protobuf.version>3.25.1</protobuf.version>
 		<grpc.version>1.63.0</grpc.version>
 		<mapstruct.version>1.6.3</mapstruct.version>
 		<lombok.version>1.18.34</lombok.version>
