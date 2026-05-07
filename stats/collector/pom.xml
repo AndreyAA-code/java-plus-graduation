@@ -12,12 +12,6 @@
 
     <artifactId>collector</artifactId>
 
-    <properties>
-        <maven.compiler.source>21</maven.compiler.source>
-        <maven.compiler.target>21</maven.compiler.target>
-        <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
-    </properties>
-
     <dependencies>
         <dependency>
             <groupId>org.springframework.boot</groupId>
@@ -75,12 +69,6 @@
             <groupId>ru.practicum</groupId>
             <artifactId>proto-schemas</artifactId>
             <version>0.0.1-SNAPSHOT</version>
-            <exclusions>
-                <exclusion>
-                    <groupId>com.google.protobuf</groupId>
-                    <artifactId>protobuf-java</artifactId>
-                </exclusion>
-            </exclusions>
         </dependency>
 
         <dependency>
@@ -130,6 +118,13 @@
             <artifactId>stats-dto</artifactId>
             <version>0.0.1-SNAPSHOT</version>
         </dependency>
+
+        <dependency>
+            <groupId>ru.practicum</groupId>
+            <artifactId>stats-common</artifactId>
+            <version>0.0.1-SNAPSHOT</version>
+            </dependency>
+
     </dependencies>
 
     <build>
@@ -170,4 +165,5 @@
             </plugin>
         </plugins>
     </build>
+
 </project>

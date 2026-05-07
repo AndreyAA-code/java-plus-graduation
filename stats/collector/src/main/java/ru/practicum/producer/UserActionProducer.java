@@ -1,23 +1,27 @@
 package ru.practicum.producer;
 
 import jakarta.annotation.PreDestroy;
-import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.avro.specific.SpecificRecordBase;
 import org.apache.kafka.clients.producer.Producer;
 import org.apache.kafka.clients.producer.ProducerRecord;
+import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.stereotype.Component;
 import ru.practicum.ewm.stats.avro.UserActionAvro;
-import ru.practicum.config.KafkaClient;
+import ru.practicum.stats.common.config.KafkaClient;
+import ru.practicum.stats.common.config.KafkaTopicsProperties;
 
 import java.time.Duration;
 
 @Slf4j
 @Component
-@RequiredArgsConstructor
 public class UserActionProducer {
     private final KafkaClient kafkaClient;
     private Producer<Long, SpecificRecordBase> producer;
+
+    public UserActionProducer(@Qualifier("producerKafkaClient") KafkaClient kafkaClient) {
+        this.kafkaClient = kafkaClient;
+    }
 
     public void sendUserAction(UserActionAvro userAction) {
         if (userAction == null) {
@@ -31,8 +35,11 @@ public class UserActionProducer {
             return;
         }
 
+        KafkaTopicsProperties topicsProperties = kafkaClient.getTopicsProperties();
+        String topic = topicsProperties.getUserActions();
+
         ProducerRecord<Long, SpecificRecordBase> record = new ProducerRecord<>(
-                kafkaClient.getTopicsProperties().getUserActions(),
+                topic,
                 null,
                 userAction.getTimestamp().toEpochMilli(),
                 userAction.getUserId(),
@@ -44,7 +51,7 @@ public class UserActionProducer {
                 log.error("Ошибка отправки действия userId={}: {}",
                         userAction.getUserId(), exception.getMessage(), exception);
             } else {
-                log.debug("Действие отправлено: userId={}, topic={}, offset={}",
+                log.info("Действие отправлено: userId={}, topic={}, offset={}",
                         userAction.getUserId(), metadata.topic(), metadata.offset());
             }
         });

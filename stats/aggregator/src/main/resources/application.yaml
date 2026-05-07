@@ -19,7 +19,7 @@ eureka:
     instance-id: ${spring.application.name}:${random.value}
     prefer-ip-address: false
     hostname: localhost
-    non-secure-port: ${server.port}
+
   client:
     serviceUrl:
       defaultZone: http://localhost:8761/eureka/
