@@ -1,0 +1,56 @@
+package ru.practicum.service;
+
+import jakarta.annotation.PostConstruct;
+import jakarta.annotation.PreDestroy;
+import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
+import org.apache.avro.specific.SpecificRecordBase;
+import org.apache.kafka.clients.consumer.ConsumerRecord;
+import org.apache.kafka.clients.consumer.ConsumerRecords;
+import org.springframework.stereotype.Service;
+import ru.practicum.consumer.UserActionConsumer;
+import ru.practicum.ewm.stats.avro.UserActionAvro;
+import ru.practicum.processor.UserActionProcessor;
+
+import java.time.Duration;
+
+@Slf4j
+@Service
+@RequiredArgsConstructor
+public class KafkaConsumerService {
+
+    private final UserActionConsumer consumer;
+    private final UserActionProcessor processor;
+    private volatile boolean running = true;
+
+    @PostConstruct
+    public void start() {
+        consumer.subscribe();
+        Thread consumerThread = new Thread(this::consume);
+        consumerThread.setName("kafka-consumer-thread");
+        consumerThread.start();
+        log.info("Kafka consumer thread started");
+    }
+
+    private void consume() {
+        while (running) {
+            try {
+                ConsumerRecords<Long, SpecificRecordBase> records = consumer.poll(Duration.ofMillis(1000));
+                for (ConsumerRecord<Long, SpecificRecordBase> record : records) {
+                    UserActionAvro userAction = (UserActionAvro) record.value();
+                    processor.processUserAction(userAction);
+                }
+            } catch (Exception e) {
+                log.error("Error consuming messages", e);
+            }
+        }
+    }
+
+    @PreDestroy
+    public void stop() {
+        running = false;
+        consumer.wakeup();
+        consumer.close();
+        log.info("Kafka consumer stopped");
+    }
+}
