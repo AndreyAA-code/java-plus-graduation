@@ -36,4 +36,6 @@ public interface EventService {
 
     void updateConfirmedRequests(Long eventId, Long count);
 
+    List<ShortEventResponseDto> findAllById(List<Long> ids);
+
 }

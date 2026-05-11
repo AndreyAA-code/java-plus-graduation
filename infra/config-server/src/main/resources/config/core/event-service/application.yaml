@@ -60,3 +60,12 @@ management:
     web:
       exposure:
         include: health,info
+
+grpc:
+  client:
+    collector:
+      address: discovery:///COLLECTOR
+      negotiationType: plaintext
+    analyzer:
+      address: discovery:///ANALYZER
+      negotiationType: plaintext

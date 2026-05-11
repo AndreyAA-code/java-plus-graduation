@@ -32,6 +32,7 @@ import ru.practicum.util.EventStateAction;
 
 import java.time.LocalDateTime;
 import java.util.*;
+import java.util.function.Function;
 import java.util.stream.Collectors;
 
 @Slf4j
@@ -381,16 +382,17 @@ public class EventServiceImpl implements EventService {
         eventRepository.save(event);
     }
 
-    private UserShortDto findUser(Long userId) {
-        try {
-            return userFeignClient.getUserById(userId);
-        } catch (Exception e) {
-            log.error("Failed to fetch user with id {}: {}. Returning default user.", userId, e.getMessage());
-            UserShortDto defaultUser = new UserShortDto();
-            defaultUser.setId(userId);
-            defaultUser.setName("Default User");
-            return defaultUser;
-        }
+    @Override
+    public List<ShortEventResponseDto> findAllById(List<Long> ids) {
+        List<Event> events = eventRepository.findAllById(ids);
+        Map<Long, Event> eventMap = events.stream()
+                .collect(Collectors.toMap(Event::getId, Function.identity()));
+
+        return ids.stream()
+                .filter(eventMap::containsKey)
+                .map(eventMap::get)
+                .map(event -> mapper.eventToShortEventResponseDto(event, null))
+                .collect(Collectors.toList());
     }
 
     private Event findEvent(Long eventId) {
@@ -448,6 +450,18 @@ public class EventServiceImpl implements EventService {
             log.info("Hit sent for event {}", eventId);
         } catch (Exception e) {
             log.error("Failed to send hit for event {}: {}", eventId, e.getMessage());
+        }
+    }
+
+    private UserShortDto findUser(Long userId) {
+        try {
+            return userFeignClient.getUserById(userId);
+        } catch (Exception e) {
+            log.warn("User not found: {}, creating default", userId);
+            UserShortDto userDto = new UserShortDto();
+            userDto.setId(userId);
+            userDto.setName("User " + userId);
+            return userDto;
         }
     }
 }

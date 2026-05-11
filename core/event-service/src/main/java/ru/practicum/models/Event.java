@@ -83,6 +83,8 @@ public class Event {
     @Column(name = "confirmed_requests")
     private int confirmedRequests;
 
+    private Double rating;
+
     @Override
     public String toString() {
         return "Event{" +

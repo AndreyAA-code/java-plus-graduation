@@ -35,6 +35,7 @@ public class KafkaConsumerService {
         while (running) {
             try {
                 ConsumerRecords<Long, SpecificRecordBase> records = consumer.poll(Duration.ofMillis(1000));
+                log.info("Polled {} records from Kafka", records.count());
                 for (ConsumerRecord<Long, SpecificRecordBase> record : records) {
                     UserActionAvro userAction = (UserActionAvro) record.value();
                     log.info("Received user action: userId={}, eventId={}, action={}",
