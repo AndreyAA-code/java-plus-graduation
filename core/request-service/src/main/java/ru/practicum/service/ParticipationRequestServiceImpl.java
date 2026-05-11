@@ -16,6 +16,7 @@ import ru.practicum.errors.ConflictException;
 import ru.practicum.mapper.ParticipationRequestMapper;
 import ru.practicum.model.ParticipationRequest;
 import ru.practicum.repository.ParticipationRequestRepository;
+import ru.practicum.request.service.CollectorActionService;
 import ru.practicum.util.EventState;
 import ru.practicum.util.ParticipationRequestStatus;
 
@@ -37,6 +38,7 @@ public class ParticipationRequestServiceImpl implements ParticipationRequestServ
     private final UserFeignClient userFeignClient;
     private final ParticipationRequestMapper requestMapper;
     private final EventFeignClient eventFeignClient;
+    private final CollectorActionService collectorActionService;
 
     @Override
     @Transactional
@@ -81,7 +83,12 @@ public class ParticipationRequestServiceImpl implements ParticipationRequestServ
         log.info("Event {} details: state={}, requestModeration={}, participantLimit={}, confirmedRequests={}",
                 eventId, event.getState(), event.getRequestModeration(),
                 event.getParticipantLimit(), event.getConfirmedRequests());
-        return requestMapper.mapToDto(requestRepository.save(request));
+
+        ParticipationRequestDto result = requestMapper.mapToDto(requestRepository.save(request));
+
+        collectorActionService.sendRegister(userId, eventId);
+
+        return result;
     }
 
     @Override
