@@ -21,18 +21,21 @@ spring:
         format_sql: true
 
 kafka:
-  bootstrap-servers: localhost:9092
+  bootstrap:
+    servers: localhost:9092
   consumer:
-    group-id: analyzer-group-v6
-    key-deserializer: org.apache.kafka.common.serialization.LongDeserializer
-    value-deserializer: ru.practicum.deserializer.UserActionAvroDeserializer
-    properties:
-      specific.avro.reader: true
+    group:
+      action: stats.analyzer.action
+      similarity: stats.analyzer.similarity
+    poll:
+      timeout: 100
+  topics:
+    stats-user-action-v1: stats.user-actions.v1
+    stats-events-similarity-v1: stats.events-similarity.v1
 
 grpc:
   server:
     port: 0
-    reflection-service-enabled: true
 
 server:
   port: 0

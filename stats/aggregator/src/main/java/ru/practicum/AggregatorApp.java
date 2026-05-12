@@ -7,10 +7,8 @@ import org.springframework.cloud.client.discovery.EnableDiscoveryClient;
 import org.springframework.kafka.annotation.EnableKafka;
 import ru.practicum.stats.common.config.KafkaTopicsProperties;
 
-@EnableKafka
-@SpringBootApplication(scanBasePackages = {"ru.practicum", "ru.practicum.stats.common"})
+@SpringBootApplication
 @EnableDiscoveryClient
-@EnableConfigurationProperties(KafkaTopicsProperties.class)
 public class AggregatorApp {
     public static void main(String[] args) {
         SpringApplication.run(AggregatorApp.class, args);

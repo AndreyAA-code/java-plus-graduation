@@ -12,22 +12,24 @@ import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 
 public class AvroSerializer<T extends SpecificRecordBase> implements Serializer<T> {
-
+    
     private final EncoderFactory encoderFactory = EncoderFactory.get();
     private BinaryEncoder encoder;
-
+    
     @Override
     public byte[] serialize(String topic, T data) {
+        if (data == null) {
+            return null;
+        }
+        
         try (ByteArrayOutputStream out = new ByteArrayOutputStream()) {
-            if (data != null) {
-                DatumWriter<T> writer = new SpecificDatumWriter<>(data.getSchema());
-                encoder = encoderFactory.binaryEncoder(out, encoder);
-                writer.write(data, encoder);
-                encoder.flush();
-            }
+            DatumWriter<T> writer = new SpecificDatumWriter<>(data.getSchema());
+            encoder = encoderFactory.binaryEncoder(out, encoder);
+            writer.write(data, encoder);
+            encoder.flush();
             return out.toByteArray();
         } catch (IOException ex) {
-            throw new SerializationException("Ошибка сериализации данных для топика [" + topic + "]", ex);
+            throw new SerializationException("Error serializing Avro message for topic " + topic, ex);
         }
     }
 }

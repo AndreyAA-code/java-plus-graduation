@@ -1,7 +1,8 @@
-package ru.practicum.stats.common.config;
+package ru.practicum.config;
 
 import lombok.RequiredArgsConstructor;
 import org.apache.avro.specific.SpecificRecordBase;
+import org.apache.kafka.clients.KafkaClient;
 import org.apache.kafka.clients.consumer.Consumer;
 import org.apache.kafka.clients.consumer.ConsumerConfig;
 import org.apache.kafka.clients.consumer.KafkaConsumer;
@@ -15,6 +16,7 @@ import org.springframework.stereotype.Component;
 import ru.practicum.deserializer.UserActionAvroDeserializer;
 import ru.practicum.serializer.AvroSerializer;
 import ru.practicum.deserializer.EventSimilarityAvroDeserializer;
+import ru.practicum.KafkaTopicx
 
 import java.time.Duration;
 import java.util.HashMap;

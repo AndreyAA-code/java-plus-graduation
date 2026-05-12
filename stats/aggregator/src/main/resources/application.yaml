@@ -23,8 +23,3 @@ eureka:
   client:
     serviceUrl:
       defaultZone: http://localhost:8761/eureka/
-
-kafka:
-  topics:
-    stats-user-action-v1: stats.user-actions.v1
-    stats-events-similarity-v1: stats.events-similarity.v1

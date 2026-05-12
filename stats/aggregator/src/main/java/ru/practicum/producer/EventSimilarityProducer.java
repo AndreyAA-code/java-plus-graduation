@@ -9,7 +9,6 @@ import org.apache.kafka.clients.producer.ProducerRecord;
 import org.springframework.stereotype.Component;
 import ru.practicum.ewm.stats.avro.EventSimilarityAvro;
 import ru.practicum.stats.common.config.KafkaClient;
-import ru.practicum.stats.common.config.KafkaTopicsProperties;
 
 import java.time.Duration;
 
