@@ -25,7 +25,6 @@ import ru.practicum.models.Event;
 import ru.practicum.models.QEvent;
 import ru.practicum.repository.CategoryRepository;
 import ru.practicum.repository.EventRepository;
-import ru.practicum.stats.client.StatsClient;
 import ru.practicum.util.EventState;
 import ru.practicum.util.EventStateAction;
 

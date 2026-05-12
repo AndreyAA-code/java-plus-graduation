@@ -7,8 +7,7 @@ import org.apache.kafka.clients.producer.Producer;
 import java.time.Duration;
 
 public interface KafkaClient {
-    Consumer<Long, SpecificRecordBase> getConsumerAction();
-    Consumer<Long, SpecificRecordBase> getConsumerSimilarity();
+    Consumer<Long, SpecificRecordBase> getConsumer();
     Producer<Long, SpecificRecordBase> getProducer();
     Duration getPollTimeout();
     KafkaTopicsProperties getTopicsProperties();

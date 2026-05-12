@@ -3,61 +3,78 @@ package ru.practicum.consumer;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.avro.specific.SpecificRecordBase;
-import org.apache.kafka.clients.consumer.ConsumerRecord;
+import org.apache.kafka.clients.consumer.Consumer;
 import org.apache.kafka.clients.consumer.ConsumerRecords;
+import org.apache.kafka.clients.consumer.OffsetAndMetadata;
+import org.apache.kafka.common.TopicPartition;
 import org.springframework.stereotype.Component;
-import ru.practicum.ewm.stats.avro.EventSimilarityAvro;
-import ru.practicum.stats.common.config.KafkaClient;
-import ru.practicum.service.EventSimilarityService;
+import ru.practicum.config.KafkaClient;
 
-import jakarta.annotation.PostConstruct;
-import jakarta.annotation.PreDestroy;
 import java.time.Duration;
+import java.util.List;
+import java.util.Map;
 
 @Slf4j
 @Component
 @RequiredArgsConstructor
 public class EventSimilarityConsumer {
-    
     private final KafkaClient kafkaClient;
-    private final EventSimilarityService eventSimilarityService;
-    private volatile boolean running = true;
-    
-    @PostConstruct
-    public void start() {
-        Thread consumerThread = new Thread(this::consume);
-        consumerThread.setName("event-similarity-consumer-thread");
-        consumerThread.start();
-        log.info("Event similarity consumer thread started");
+    private Consumer<Long, SpecificRecordBase> consumer;
+
+    public ConsumerRecords<Long, SpecificRecordBase> poll(Duration timeout) {
+        return getConsumer().poll(timeout);
     }
-    
-    private void consume() {
-        var consumer = kafkaClient.getConsumerSimilarity();
-        consumer.subscribe(java.util.List.of("stats.events-similarity.v1"));
-        log.info("Subscribed to topic: stats.events-similarity.v1");
-        
-        while (running) {
+
+    public void subscribe() {
+        getConsumer().subscribe(List.of(kafkaClient.getTopicsProperties().getEventsSimilarity()));
+        log.info("Подписка на топик сходств: {}", kafkaClient.getTopicsProperties().getEventsSimilarity());
+    }
+
+    public void commitAsync(Map<TopicPartition, OffsetAndMetadata> offsets) {
+        getConsumer().commitAsync(offsets, (offsetsMap, exception) -> {
+            if (exception != null) {
+                log.error("Ошибка асинхронного коммита оффсетов: {}", offsetsMap, exception);
+            } else {
+                log.debug("Асинхронный коммит оффсетов выполнен: {}", offsetsMap);
+            }
+        });
+    }
+
+    public void commitSync(Map<TopicPartition, OffsetAndMetadata> offsets) {
+        try {
+            getConsumer().commitSync(offsets);
+            log.debug("Синхронный коммит оффсетов выполнен: {}", offsets);
+        } catch (Exception e) {
+            log.error("Ошибка синхронного коммита оффсетов", e);
+            throw e;
+        }
+    }
+
+    public void wakeup() {
+        if (consumer != null) {
+            log.info("Вызов wakeup для consumer сходств");
+            consumer.wakeup();
+        }
+    }
+
+    public void close() {
+        if (consumer != null) {
             try {
-                ConsumerRecords<Long, SpecificRecordBase> records = consumer.poll(Duration.ofMillis(1000));
-                for (ConsumerRecord<Long, SpecificRecordBase> record : records) {
-                    EventSimilarityAvro similarity = (EventSimilarityAvro) record.value();
-                    log.info("Received event similarity: eventA={}, eventB={}, score={}",
-                            similarity.getEventA(), similarity.getEventB(), similarity.getScore());
-                    eventSimilarityService.saveEventSimilarity(similarity);
-                }
-                if (!records.isEmpty()) {
-                    consumer.commitSync();
-                    log.debug("Committed offsets for {} records", records.count());
-                }
+                consumer.wakeup();
+                consumer.close(Duration.ofMillis(100));
+                log.info("Consumer сходств успешно закрыт");
             } catch (Exception e) {
-                log.error("Error consuming event similarity", e);
+                log.error("Ошибка при закрытии consumer сходств", e);
+            } finally {
+                consumer = null;
             }
         }
     }
-    
-    @PreDestroy
-    public void stop() {
-        running = false;
-        log.info("Event similarity consumer stopped");
+
+    public Consumer<Long, SpecificRecordBase> getConsumer() {
+        if (consumer == null) {
+            consumer = kafkaClient.getConsumerSimilarity();
+        }
+        return consumer;
     }
 }

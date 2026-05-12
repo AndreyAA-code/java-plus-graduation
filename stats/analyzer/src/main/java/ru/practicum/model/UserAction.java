@@ -29,5 +29,5 @@ public class UserAction {
     private Double userScore;
 
     @Column(name = "timestamp_action")
-    private Instant timestampAction;
+    private Instant timestamp;
 }

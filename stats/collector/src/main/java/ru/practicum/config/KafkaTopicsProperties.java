@@ -2,10 +2,11 @@ package ru.practicum.config;
 
 import lombok.Data;
 import org.springframework.boot.context.properties.ConfigurationProperties;
+import org.springframework.stereotype.Component;
 
 @Data
-@ConfigurationProperties(prefix = "kafka.topics")
+@Component
+@ConfigurationProperties(prefix = "spring.kafka.topics")
 public class KafkaTopicsProperties {
     private String userActions = "stats.user-actions.v1";
-    private String eventsSimilarity = "stats.events-similarity.v1";
 }

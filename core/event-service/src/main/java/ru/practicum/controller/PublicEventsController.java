@@ -19,8 +19,6 @@ import ru.practicum.event.service.CollectorActionService;
 import ru.practicum.ewm.stats.proto.RecommendedEventProto;
 import ru.practicum.ewm.stats.proto.UserPredictionsRequestProto;
 import ru.practicum.service.event.EventService;
-import ru.practicum.stats.client.StatsClient;
-
 import java.time.LocalDateTime;
 import java.util.List;
 import java.util.stream.Collectors;
@@ -33,7 +31,6 @@ import java.util.stream.Stream;
 public class PublicEventsController {
 
     private final EventService service;
-    private final StatsClient statsClient;
     private final CollectorActionService collectorActionService;
     private final AnalyzerClient analyzerClient;
 
@@ -42,7 +39,6 @@ public class PublicEventsController {
     public List<ShortEventResponseDto> findAll(@ModelAttribute EventSearchCriteria criteria, HttpServletRequest req) throws Exception {
        log.info("Find all events");
        List<ShortEventResponseDto> res = service.find(criteria);
-     //  saveHit(req);
        return res;
     }
 
@@ -90,15 +86,6 @@ public class PublicEventsController {
         return service.findEventsNear(lat, lon, radius,
                 PageRequest.of(from / size, size, Sort.by("event_date").descending()));
     }
-
-   /* private void saveHit(HttpServletRequest request) {
-        EndpointHitDto endpointHitDto = new EndpointHitDto();
-        endpointHitDto.setApp("event-service");
-        endpointHitDto.setUri(request.getRequestURI());
-        endpointHitDto.setIp(request.getRemoteAddr());
-        endpointHitDto.setTimestamp(LocalDateTime.now());
-        statsClient.hit(endpointHitDto);
-    } */
 
     @PutMapping("/{eventId}/like")
     public ResponseEntity<Void> likeEvent(@PathVariable long eventId,

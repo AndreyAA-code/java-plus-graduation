@@ -10,8 +10,8 @@ import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.context.annotation.Scope;
-import ru.practicum.deserializer.EventSimilarityDeserializer;
-import ru.practicum.deserializer.UserActionDeserializer;
+import ru.practicum.deserializer.EventSimilarityAvroDeserializer;
+import ru.practicum.deserializer.UserActionAvroDeserializer;
 
 import java.time.Duration;
 import java.util.HashMap;
@@ -73,7 +73,7 @@ public class KafkaConfig {
                 Map<String, Object> config = new HashMap<>();
                 config.put(ConsumerConfig.BOOTSTRAP_SERVERS_CONFIG, bootstrapServers);
                 config.put(ConsumerConfig.KEY_DESERIALIZER_CLASS_CONFIG, LongDeserializer.class);
-                config.put(ConsumerConfig.VALUE_DESERIALIZER_CLASS_CONFIG, UserActionDeserializer.class);
+                config.put(ConsumerConfig.VALUE_DESERIALIZER_CLASS_CONFIG, UserActionAvroDeserializer.class);
                 config.put(ConsumerConfig.GROUP_ID_CONFIG, groupAction);
                 return new KafkaConsumer<>(config);
             }
@@ -82,7 +82,7 @@ public class KafkaConfig {
                 Map<String, Object> config = new HashMap<>();
                 config.put(ConsumerConfig.BOOTSTRAP_SERVERS_CONFIG, bootstrapServers);
                 config.put(ConsumerConfig.KEY_DESERIALIZER_CLASS_CONFIG, LongDeserializer.class);
-                config.put(ConsumerConfig.VALUE_DESERIALIZER_CLASS_CONFIG, EventSimilarityDeserializer.class);
+                config.put(ConsumerConfig.VALUE_DESERIALIZER_CLASS_CONFIG, EventSimilarityAvroDeserializer.class);
                 config.put(ConsumerConfig.GROUP_ID_CONFIG, groupSimilarity);
                 return new KafkaConsumer<>(config);
             }
