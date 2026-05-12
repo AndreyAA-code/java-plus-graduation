@@ -23,7 +23,7 @@ spring:
 kafka:
   bootstrap-servers: localhost:9092
   consumer:
-    group-id: analyzer-group-v5
+    group-id: analyzer-group-v6
     key-deserializer: org.apache.kafka.common.serialization.LongDeserializer
     value-deserializer: ru.practicum.deserializer.UserActionAvroDeserializer
     properties:
