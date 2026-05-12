@@ -42,7 +42,7 @@ public class PublicEventsController {
     public List<ShortEventResponseDto> findAll(@ModelAttribute EventSearchCriteria criteria, HttpServletRequest req) throws Exception {
        log.info("Find all events");
        List<ShortEventResponseDto> res = service.find(criteria);
-       saveHit(req);
+     //  saveHit(req);
        return res;
     }
 
@@ -72,7 +72,7 @@ public class PublicEventsController {
                                                       HttpServletRequest req) {
 
         log.info("Find events by location {}", locationId);
-        saveHit(req);
+       // saveHit(req);
         return service.findEventsByLocation(locationId, PageRequest.of(from / size, size, Sort.by("event_date").descending()));
     }
 
@@ -91,14 +91,14 @@ public class PublicEventsController {
                 PageRequest.of(from / size, size, Sort.by("event_date").descending()));
     }
 
-    private void saveHit(HttpServletRequest request) {
+   /* private void saveHit(HttpServletRequest request) {
         EndpointHitDto endpointHitDto = new EndpointHitDto();
         endpointHitDto.setApp("event-service");
         endpointHitDto.setUri(request.getRequestURI());
         endpointHitDto.setIp(request.getRemoteAddr());
         endpointHitDto.setTimestamp(LocalDateTime.now());
         statsClient.hit(endpointHitDto);
-    }
+    } */
 
     @PutMapping("/{eventId}/like")
     public ResponseEntity<Void> likeEvent(@PathVariable long eventId,

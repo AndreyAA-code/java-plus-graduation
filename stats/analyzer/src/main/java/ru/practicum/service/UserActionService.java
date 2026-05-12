@@ -25,6 +25,16 @@ public class UserActionService {
         double userScore = getWeight(userActionAvro.getActionType());
         Instant timestamp = userActionAvro.getTimestamp();
         
+        UserAction existingAction = userActionRepository
+                .findByUserIdAndEventId(userId, eventId)
+                .orElse(null);
+        
+        if (existingAction != null && existingAction.getUserScore() >= userScore) {
+            log.debug("Existing score {} >= new score {}, skipping update", 
+                     existingAction.getUserScore(), userScore);
+            return;
+        }
+        
         UserAction userAction = UserAction.builder()
                 .userId(userId)
                 .eventId(eventId)
@@ -33,14 +43,14 @@ public class UserActionService {
                 .build();
         
         userActionRepository.save(userAction);
-        log.info("Saved user action: userId={}, eventId={}, score={}, timestamp={}", userId, eventId, userScore, timestamp);
+        log.info("Saved user action: userId={}, eventId={}, score={}", userId, eventId, userScore);
     }
-    
+
     private double getWeight(ActionTypeAvro actionType) {
         return switch (actionType) {
-            case LIKE -> 5.0;
-            case REGISTER -> 3.0;
-            case VIEW -> 1.0;
+            case LIKE -> 1.0;
+            case REGISTER -> 0.8;
+            case VIEW -> 0.4;
         };
     }
 }
