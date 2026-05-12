@@ -15,35 +15,41 @@ import java.time.Instant;
 @Service
 @RequiredArgsConstructor
 public class UserActionService {
-    
+
     private final UserActionRepository userActionRepository;
-    
+
     @Transactional
     public void saveUserAction(UserActionAvro userActionAvro) {
         Long userId = userActionAvro.getUserId();
         Long eventId = userActionAvro.getEventId();
         double userScore = getWeight(userActionAvro.getActionType());
         Instant timestamp = userActionAvro.getTimestamp();
-        
+
         UserAction existingAction = userActionRepository
                 .findByUserIdAndEventId(userId, eventId)
                 .orElse(null);
-        
-        if (existingAction != null && existingAction.getUserScore() >= userScore) {
-            log.debug("Existing score {} >= new score {}, skipping update", 
-                     existingAction.getUserScore(), userScore);
-            return;
+
+        if (existingAction != null) {
+            // Обновляем существующую запись, если новый вес больше
+            if (userScore > existingAction.getUserScore()) {
+                existingAction.setUserScore(userScore);
+                existingAction.setTimestampAction(timestamp);
+                userActionRepository.save(existingAction);
+                log.info("Updated user action: userId={}, eventId={}, score={}", userId, eventId, userScore);
+            } else {
+                log.debug("Existing score {} >= new score {}, skipping", existingAction.getUserScore(), userScore);
+            }
+        } else {
+            // Создаем новую запись
+            UserAction userAction = UserAction.builder()
+                    .userId(userId)
+                    .eventId(eventId)
+                    .userScore(userScore)
+                    .timestampAction(timestamp)
+                    .build();
+            userActionRepository.save(userAction);
+            log.info("Saved user action: userId={}, eventId={}, score={}", userId, eventId, userScore);
         }
-        
-        UserAction userAction = UserAction.builder()
-                .userId(userId)
-                .eventId(eventId)
-                .userScore(userScore)
-                .timestampAction(timestamp)
-                .build();
-        
-        userActionRepository.save(userAction);
-        log.info("Saved user action: userId={}, eventId={}, score={}", userId, eventId, userScore);
     }
 
     private double getWeight(ActionTypeAvro actionType) {

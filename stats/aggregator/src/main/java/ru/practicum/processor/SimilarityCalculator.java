@@ -57,20 +57,14 @@ public class SimilarityCalculator {
 
             List<EventSimilarityAvro> similarities = new ArrayList<>();
 
-            // ИСПРАВЛЕНИЕ: Итерируемся по ВСЕМ мероприятиям в системе
-            Set<Long> allEvents = new HashSet<>(weightMatrix.keySet());
-
-            for (Long otherEventId : allEvents) {
+            // ИСПРАВЛЕНИЕ: перебираем ТОЛЬКО мероприятия пользователя
+            for (Long otherEventId : userEvents) {
                 if (otherEventId.equals(eventId)) continue;
 
                 double similarity = recalculatePair(eventId, otherEventId, userId,
                         oldWeight, actionWeight);
 
-                similarities.add(similarityMapper.toAvro(
-                        eventId,
-                        otherEventId,
-                        similarity
-                ));
+                similarities.add(similarityMapper.toAvro(eventId, otherEventId, similarity));
             }
 
             userEvents.add(eventId);

@@ -45,6 +45,10 @@ public class EventSimilarityConsumer {
                             similarity.getEventA(), similarity.getEventB(), similarity.getScore());
                     eventSimilarityService.saveEventSimilarity(similarity);
                 }
+                if (!records.isEmpty()) {
+                    consumer.commitSync();
+                    log.debug("Committed offsets for {} records", records.count());
+                }
             } catch (Exception e) {
                 log.error("Error consuming event similarity", e);
             }

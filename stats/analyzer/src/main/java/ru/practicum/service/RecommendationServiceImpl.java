@@ -3,7 +3,6 @@ package ru.practicum.service;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.data.domain.PageRequest;
-import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.Sort;
 import org.springframework.stereotype.Service;
 import ru.practicum.ewm.stats.proto.InteractionsCountRequestProto;
@@ -35,9 +34,39 @@ public class RecommendationServiceImpl implements RecommendationService {
 
         log.info("Getting recommendations for user: {}, maxResults: {}", userId, maxResults);
 
-        // TODO: Реализовать полный алгоритм рекомендаций
-        // Пока возвращаем пустой поток
-        return Stream.empty();
+        Set<Long> userEvents = userActionRepository.findEventIdsByUserId(userId);
+        
+        if (userEvents.isEmpty()) {
+            log.info("User {} has no interactions", userId);
+            return Stream.empty();
+        }
+        
+        List<Long> recentEvents = userActionRepository.findRecentEventIdsByUserId(
+            userId, 
+            PageRequest.of(0, 10, Sort.by(Sort.Direction.DESC, "timestampAction"))
+        );
+        
+        Map<Long, Double> recommendations = new HashMap<>();
+        
+        for (Long recentEvent : recentEvents) {
+            List<EventSimilarity> similarities = eventSimilarityRepository.findAllByEventId(recentEvent);
+            
+            for (EventSimilarity sim : similarities) {
+                long candidateId = sim.getEventA().equals(recentEvent) ? sim.getEventB() : sim.getEventA();
+                
+                if (!userEvents.contains(candidateId)) {
+                    recommendations.merge(candidateId, sim.getScore(), Math::max);
+                }
+            }
+        }
+        
+        return recommendations.entrySet().stream()
+                .sorted(Map.Entry.<Long, Double>comparingByValue().reversed())
+                .limit(maxResults)
+                .map(entry -> RecommendedEventProto.newBuilder()
+                        .setEventId(entry.getKey())
+                        .setScore(entry.getValue())
+                        .build());
     }
 
     @Override
@@ -48,15 +77,9 @@ public class RecommendationServiceImpl implements RecommendationService {
 
         log.info("Getting similar events for event: {}, user: {}, maxResults: {}", eventId, userId, maxResults);
 
-        // Получаем все похожие мероприятия
         List<EventSimilarity> allSimilarities = eventSimilarityRepository.findAllByEventId(eventId);
-        log.debug("Found {} total similarities for event {}", allSimilarities.size(), eventId);
-
-        // Получаем мероприятия, с которыми пользователь уже взаимодействовал
         Set<Long> userEvents = userActionRepository.findEventIdsByUserId(userId);
-        log.debug("User {} has interacted with {} events", userId, userEvents.size());
 
-        // Фильтруем те, с которыми пользователь НЕ взаимодействовал
         List<EventSimilarity> filtered = allSimilarities.stream()
                 .filter(sim -> {
                     long otherId = sim.getEventA().equals(eventId) ? sim.getEventB() : sim.getEventA();
@@ -65,9 +88,6 @@ public class RecommendationServiceImpl implements RecommendationService {
                 .sorted((a, b) -> Double.compare(b.getScore(), a.getScore()))
                 .limit(maxResults)
                 .collect(Collectors.toList());
-
-        log.info("Found {} similar events for eventId={}, userId={}",
-                filtered.size(), eventId, userId);
 
         return recommendationsMapper.mapToProto(filtered, eventId);
     }
@@ -92,11 +112,12 @@ public class RecommendationServiceImpl implements RecommendationService {
                     .mapToDouble(Double::doubleValue)
                     .sum();
 
-            result.put(eventId, sum);  // сырая сумма, без нормализации
+            result.put(eventId, sum);
             log.info("Event {}: sum = {}", eventId, sum);
         }
 
         return recommendationsMapper.mapToProto(result);
-
     }
+
+
 }
