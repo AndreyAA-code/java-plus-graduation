@@ -17,7 +17,6 @@ public class EventSimilarityAvroDeserializer implements Deserializer<EventSimila
     
     @Override
     public void configure(Map<String, ?> configs, boolean isKey) {
-        // Конфигурация не требуется
     }
     
     @Override
@@ -36,6 +35,5 @@ public class EventSimilarityAvroDeserializer implements Deserializer<EventSimila
     
     @Override
     public void close() {
-        // Ничего не нужно закрывать
     }
 }
