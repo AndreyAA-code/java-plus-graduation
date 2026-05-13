@@ -83,7 +83,8 @@ public class Event {
     @Column(name = "confirmed_requests")
     private int confirmedRequests;
 
-    private Double rating;
+    @Column(name = "rating", nullable = false)
+    private Double rating = 0.0;
 
     @Override
     public String toString() {

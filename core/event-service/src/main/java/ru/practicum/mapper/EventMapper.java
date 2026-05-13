@@ -17,6 +17,7 @@ public interface EventMapper {
     @Mapping(target = "createdOn", expression = "java(java.time.LocalDateTime.now())")
     @Mapping(target = "category", source = "category")
     @Mapping(target = "initiatorId", source = "userId")
+    @Mapping(target = "rating", constant = "0.0")
     Event eventRequestToEvent(NewEventRequestDto newEventRequest, Category category, long userId);
 
     @BeanMapping(nullValuePropertyMappingStrategy = NullValuePropertyMappingStrategy.IGNORE)

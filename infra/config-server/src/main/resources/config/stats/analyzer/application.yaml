@@ -25,7 +25,7 @@ spring:
       key-deserializer: org.apache.kafka.common.serialization.LongDeserializer
       value-deserializer: ru.practicum.deserializer.UserActionAvroDeserializer
       group-id: stats.analyzer.action
-      auto-offset-reset: earliest
+      auto-offset-reset: latest
 
 kafka:
   bootstrap:
