@@ -11,7 +11,6 @@ import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 import ru.practicum.client.AnalyzerClient;
-import ru.practicum.dto.EndpointHitDto;
 import ru.practicum.dto.event.event.EventResponseDto;
 import ru.practicum.dto.event.event.EventSearchCriteria;
 import ru.practicum.dto.event.event.ShortEventResponseDto;
@@ -19,7 +18,7 @@ import ru.practicum.event.service.CollectorActionService;
 import ru.practicum.ewm.stats.proto.RecommendedEventProto;
 import ru.practicum.ewm.stats.proto.UserPredictionsRequestProto;
 import ru.practicum.service.event.EventService;
-import java.time.LocalDateTime;
+
 import java.util.List;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
@@ -68,7 +67,6 @@ public class PublicEventsController {
                                                       HttpServletRequest req) {
 
         log.info("Find events by location {}", locationId);
-       // saveHit(req);
         return service.findEventsByLocation(locationId, PageRequest.of(from / size, size, Sort.by("event_date").descending()));
     }
 

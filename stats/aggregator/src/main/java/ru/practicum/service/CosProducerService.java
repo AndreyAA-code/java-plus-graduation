@@ -32,11 +32,10 @@ public class CosProducerService {
                 .setTimestamp(Instant.ofEpochMilli(timestamp))
                 .build();
 
-        // Явно приводим к типу SpecificRecordBase
         ProducerRecord<Long, SpecificRecordBase> record = new ProducerRecord<>(
                 similarityTopic,
                 orderedA,
-                similarity  // EventSimilarityAvro является SpecificRecordBase
+                similarity
         );
 
         kafkaClient.getProducer().send(record, (metadata, exception) -> {

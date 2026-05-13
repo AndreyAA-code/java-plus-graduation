@@ -25,14 +25,11 @@ public class UserActionProcessor {
 
         double weight = getWeight(userAction.getActionType());
 
-        // Получаем старый вес пользователя для этого мероприятия
         Map<Long, Double> eventWeights = cosService.getEventWeights(eventId);
         Double oldWeight = eventWeights.get(userId);
 
-        // Обновляем вес (после обновления пользователь будет связан с eventId)
         cosService.updateEventWeight(eventId, userId, weight);
 
-        // Если вес не изменился (был больше или равен новому) — пересчёт не требуется
         if (oldWeight != null && oldWeight >= weight) {
             log.info("Weight for user {} event {} not changed (old={}, new={}), skipping similarity recalculation",
                     userId, eventId, oldWeight, weight);
@@ -42,17 +39,13 @@ public class UserActionProcessor {
         log.info("=== PROCESSING: userId={}, eventId={}, weight={} (oldWeight={}) ===",
                 userId, eventId, weight, oldWeight);
 
-        // Получаем мероприятия, с которыми пользователь уже взаимодействовал
         Set<Long> userEvents = cosService.getUserEvents(userId);
         log.info("User events BEFORE update: {}", userEvents);
 
-        // Добавляем текущее мероприятие в список для пересчёта (если его ещё нет)
         userEvents.add(eventId);
         log.info("User events AFTER add current: {}", userEvents);
         log.info("All events in system: {}", cosService.getAllEventIds());
 
-        // Пересчитываем similarity ТОЛЬКО для пар с участием eventId
-        // и ТОЛЬКО для мероприятий, с которыми пользователь уже взаимодействовал
         int sentCount = 0;
         for (Long otherEventId : userEvents) {
             if (otherEventId.equals(eventId)) continue;
@@ -68,7 +61,6 @@ public class UserActionProcessor {
             sentCount++;
         }
         log.info("Total similarities sent for this action: {}", sentCount);
-        log.info("==================================================");
     }
 
     private double getWeight(ActionTypeAvro actionType) {

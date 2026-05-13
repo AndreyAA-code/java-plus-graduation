@@ -57,7 +57,6 @@ public class SimilarityCalculator {
 
             List<EventSimilarityAvro> similarities = new ArrayList<>();
 
-            // ИСПРАВЛЕНИЕ: перебираем ТОЛЬКО мероприятия пользователя
             for (Long otherEventId : userEvents) {
                 if (otherEventId.equals(eventId)) continue;
 

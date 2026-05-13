@@ -440,7 +440,7 @@ public class EventServiceImpl implements EventService {
     private void sendHit(Long eventId, HttpServletRequest request) {
         try {
             EndpointHitDto hit = EndpointHitDto.builder()
-                    .app("event-service")  // важно: правильное имя сервиса
+                    .app("event-service")
                     .uri("/events/" + eventId)
                     .ip(request.getRemoteAddr())
                     .timestamp(LocalDateTime.now())

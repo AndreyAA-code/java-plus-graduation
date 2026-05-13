@@ -1,4 +1,3 @@
-// Файл: analyzer/src/main/java/ru/practicum/service/KafkaConsumerService.java
 package ru.practicum.service;
 
 import jakarta.annotation.PostConstruct;
@@ -44,7 +43,6 @@ public class KafkaConsumerService {
     private void consumeLoop() {
         while (running) {
             try {
-                // Читаем действия пользователей
                 ConsumerRecords<Long, SpecificRecordBase> actionRecords = 
                     userActionConsumer.poll(Duration.ofMillis(1000));
                 
@@ -52,18 +50,15 @@ public class KafkaConsumerService {
                     UserActionAvro action = (UserActionAvro) record.value();
                     log.info("Received user action: userId={}, eventId={}, type={}",
                         action.getUserId(), action.getEventId(), action.getActionType());
-                    
-                    // Сохраняем в БД
+
                     recommendationService.saveUserAction(action);
-                    
-                    // Коммитим оффсет
+
                     Map<TopicPartition, OffsetAndMetadata> offsets = new HashMap<>();
                     offsets.put(new TopicPartition(record.topic(), record.partition()),
                         new OffsetAndMetadata(record.offset() + 1));
                     userActionConsumer.commitSync(offsets);
                 }
 
-                // Читаем сходства
                 ConsumerRecords<Long, SpecificRecordBase> similarityRecords = 
                     eventSimilarityConsumer.poll(Duration.ofMillis(1000));
                 
@@ -71,11 +66,9 @@ public class KafkaConsumerService {
                     EventSimilarityAvro similarity = (EventSimilarityAvro) record.value();
                     log.info("Received similarity: eventA={}, eventB={}, score={}",
                         similarity.getEventA(), similarity.getEventB(), similarity.getScore());
-                    
-                    // Сохраняем в БД
+
                     recommendationService.saveEventSimilarity(similarity);
-                    
-                    // Коммитим оффсет
+
                     Map<TopicPartition, OffsetAndMetadata> offsets = new HashMap<>();
                     offsets.put(new TopicPartition(record.topic(), record.partition()),
                         new OffsetAndMetadata(record.offset() + 1));
