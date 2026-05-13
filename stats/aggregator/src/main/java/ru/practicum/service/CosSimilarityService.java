@@ -2,7 +2,6 @@ package ru.practicum.service;
 
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
-
 import java.util.HashSet;
 import java.util.Map;
 import java.util.Set;
@@ -28,26 +27,13 @@ public class CosSimilarityService {
         return new HashSet<>(eventWeights.keySet());
     }
 
-    /**
-     * Вычисляет косинусное сходство между двумя мероприятиями.
-     * Формула: similarity = S_min / (sqrt(S_A) * sqrt(S_B))
-     * где S_min = сумма min(weightA, weightB) для всех пользователей
-     * S_A = сумма всех весов мероприятия A
-     * S_B = сумма всех весов мероприятия B
-     */
     public double calculate(Long eventA, Long eventB) {
         Map<Long, Double> weightsA = eventWeights.getOrDefault(eventA, Map.of());
         Map<Long, Double> weightsB = eventWeights.getOrDefault(eventB, Map.of());
 
-        if (weightsA.isEmpty() || weightsB.isEmpty()) {
-            return 0.0;
-        }
+        if (weightsA.isEmpty() || weightsB.isEmpty()) return 0.0;
 
-        double sMin = 0.0;
-        double sA = 0.0;
-        double sB = 0.0;
-
-        // Собираем всех пользователей из обоих мероприятий
+        double sMin = 0.0, sA = 0.0, sB = 0.0;
         Set<Long> allUsers = new HashSet<>();
         allUsers.addAll(weightsA.keySet());
         allUsers.addAll(weightsB.keySet());
@@ -55,30 +41,19 @@ public class CosSimilarityService {
         for (Long userId : allUsers) {
             double wA = weightsA.getOrDefault(userId, 0.0);
             double wB = weightsB.getOrDefault(userId, 0.0);
-
             sMin += Math.min(wA, wB);
             sA += wA;
             sB += wB;
         }
 
-        if (sA == 0.0 || sB == 0.0) {
-            return 0.0;
-        }
-
-        double result = sMin / (Math.sqrt(sA) * Math.sqrt(sB));
-
-        // Округляем до 10 знаков для избежания ошибок плавающей точки
-        result = Math.round(result * 1_000_000_000.0) / 1_000_000_000.0;
-
-        return result;
+        if (sA == 0.0 || sB == 0.0) return 0.0;
+        return sMin / (Math.sqrt(sA) * Math.sqrt(sB));
     }
 
     public Set<Long> getUserEvents(Long userId) {
         Set<Long> events = new HashSet<>();
         for (Map.Entry<Long, Map<Long, Double>> entry : eventWeights.entrySet()) {
-            if (entry.getValue().containsKey(userId)) {
-                events.add(entry.getKey());
-            }
+            if (entry.getValue().containsKey(userId)) events.add(entry.getKey());
         }
         return events;
     }

@@ -40,31 +40,31 @@ public class RecommendationService {
         log.info("Getting recommendations for user: {}, maxResults: {}", userId, maxResults);
 
         Set<Long> userEvents = userActionRepository.findEventIdsByUserId(userId);
-        
+
         if (userEvents.isEmpty()) {
             log.info("User {} has no interactions", userId);
             return Stream.empty();
         }
-        
+
         List<Long> recentEvents = userActionRepository.findRecentEventIdsByUserId(
-            userId, 
+            userId,
             PageRequest.of(0, 10, Sort.by(Sort.Direction.DESC, "timestampAction"))
         );
-        
+
         Map<Long, Double> recommendations = new HashMap<>();
-        
+
         for (Long recentEvent : recentEvents) {
             List<EventSimilarity> similarities = eventSimilarityRepository.findAllByEventId(recentEvent);
-            
+
             for (EventSimilarity sim : similarities) {
                 long candidateId = sim.getEventA().equals(recentEvent) ? sim.getEventB() : sim.getEventA();
-                
+
                 if (!userEvents.contains(candidateId)) {
                     recommendations.merge(candidateId, sim.getScore(), Math::max);
                 }
             }
         }
-        
+
         return recommendations.entrySet().stream()
                 .sorted(Map.Entry.<Long, Double>comparingByValue().reversed())
                 .limit(maxResults)
@@ -130,9 +130,9 @@ public class RecommendationService {
     @Transactional
     public void saveUserAction(UserActionAvro action) {
         double weight = switch (action.getActionType()) {
-            case VIEW -> 1.0;
-            case REGISTER -> 3.0;
-            case LIKE -> 9.0;
+            case VIEW -> 0.4;
+            case REGISTER -> 0.8;
+            case LIKE -> 1.0;
         };
 
         UserAction userAction = UserAction.builder()
