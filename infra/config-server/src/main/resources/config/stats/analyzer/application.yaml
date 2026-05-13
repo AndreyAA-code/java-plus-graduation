@@ -19,6 +19,13 @@ spring:
       hibernate:
         default_schema: analyzer
         format_sql: true
+  kafka:
+    bootstrap-servers: ${kafka.bootstrap.servers:localhost:9092}
+    consumer:
+      key-deserializer: org.apache.kafka.common.serialization.LongDeserializer
+      value-deserializer: ru.practicum.deserializer.UserActionAvroDeserializer
+      group-id: stats.analyzer.action
+      auto-offset-reset: earliest
 
 kafka:
   bootstrap:

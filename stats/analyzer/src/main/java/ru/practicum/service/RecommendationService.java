@@ -1,5 +1,6 @@
 package ru.practicum.service;
 
+import jakarta.transaction.Transactional;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.data.domain.PageRequest;
@@ -14,7 +15,10 @@ import ru.practicum.model.EventSimilarity;
 import ru.practicum.model.UserAction;
 import ru.practicum.repository.EventSimilarityRepository;
 import ru.practicum.repository.UserActionRepository;
+import ru.practicum.ewm.stats.avro.EventSimilarityAvro;
+import ru.practicum.ewm.stats.avro.UserActionAvro;
 
+import java.time.Instant;
 import java.util.*;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
@@ -26,6 +30,8 @@ public class RecommendationService {
     private final UserActionRepository userActionRepository;
     private final EventSimilarityRepository eventSimilarityRepository;
     private final RecommendationsMapper recommendationsMapper;
+    private final UserActionService userActionService;
+    private final EventSimilarityService eventSimilarityService;
 
     public Stream<RecommendedEventProto> getRecommendationsForUser(UserPredictionsRequestProto request) {
         Long userId = request.getUserId();
@@ -97,13 +103,17 @@ public class RecommendationService {
         List<UserAction> userActions = userActionRepository.findByEventIdIn(new HashSet<>(eventIds));
 
         for (Long eventId : eventIds) {
-            Map<Long, Double> userMaxScores = userActions.stream()
-                    .filter(action -> action.getEventId().equals(eventId))
-                    .collect(Collectors.toMap(
-                            UserAction::getUserId,
-                            UserAction::getUserScore,
+            Map<Long, Double> userMaxScores = new HashMap<>();
+
+            for (UserAction action : userActions) {
+                if (action.getEventId().equals(eventId)) {
+                    userMaxScores.merge(
+                            action.getUserId(),
+                            action.getUserScore(),
                             Math::max
-                    ));
+                    );
+                }
+            }
 
             double sum = userMaxScores.values().stream()
                     .mapToDouble(Double::doubleValue)
@@ -114,6 +124,37 @@ public class RecommendationService {
         }
 
         return recommendationsMapper.mapToProto(result);
+    }
+
+
+    @Transactional
+    public void saveUserAction(UserActionAvro action) {
+        double weight = switch (action.getActionType()) {
+            case VIEW -> 1.0;
+            case REGISTER -> 3.0;
+            case LIKE -> 9.0;
+        };
+
+        UserAction userAction = UserAction.builder()
+                .userId(action.getUserId())
+                .eventId(action.getEventId())
+                .userScore(weight)
+                .timestamp(Instant.ofEpochMilli(action.getTimestamp().toEpochMilli()))
+                .build();
+
+        userActionService.save(userAction);
+    }
+
+    @Transactional
+    public void saveEventSimilarity(EventSimilarityAvro similarity) {
+        EventSimilarity eventSimilarity = new EventSimilarity();
+        eventSimilarity.setEventA(similarity.getEventA());
+        eventSimilarity.setEventB(similarity.getEventB());
+        eventSimilarity.setScore(similarity.getScore());
+
+        eventSimilarityService.save(eventSimilarity);
+        log.debug("Saved event similarity: eventA={}, eventB={}, score={}",
+                similarity.getEventA(), similarity.getEventB(), similarity.getScore());
     }
 
 
