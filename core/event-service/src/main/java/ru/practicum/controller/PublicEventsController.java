@@ -94,27 +94,11 @@ public class PublicEventsController {
     }
 
     @GetMapping("/recommendations")
-    public Stream<ShortEventResponseDto> getRecommendations(
-            @RequestHeader("X-EWM-USER-ID") Long userId,
-            @RequestParam(defaultValue = "10") int maxResults) {
+    public List<ShortEventResponseDto> getRecommendations(@RequestHeader("X-EWM-USER-ID") Long userId,
+                                                          @RequestParam(defaultValue = "10") int maxResults) {
         log.info("Get recommendations for user {}", userId);
-
-        UserPredictionsRequestProto request = UserPredictionsRequestProto.newBuilder()
-                .setUserId(userId)
-                .setMaxResults(maxResults)
-                .build();
-
-        Stream<RecommendedEventProto> recommendations = analyzerClient.getRecommendationsForUser(request);
-        
-        List<Long> recommendedEventIds = recommendations
-                .map(RecommendedEventProto::getEventId)
-                .collect(Collectors.toList());
-
-        if (recommendedEventIds.isEmpty()) {
-            return Stream.empty();
-        }
-
-        List<ShortEventResponseDto> events = service.findAllById(recommendedEventIds);
-        return events.stream();
+        return service.getRecommendations(userId, maxResults);
     }
+
+
 }

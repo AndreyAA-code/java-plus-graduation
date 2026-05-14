@@ -38,4 +38,5 @@ public interface EventService {
 
     List<ShortEventResponseDto> findAllById(List<Long> ids);
 
+    List<ShortEventResponseDto> getRecommendations(Long userId, int maxResults);
 }

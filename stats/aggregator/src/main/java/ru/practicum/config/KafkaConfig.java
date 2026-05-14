@@ -40,7 +40,6 @@ public class KafkaConfig {
     private KafkaTopicsProperties topicsProperties;
 
     @Bean
-    @Scope("prototype")
     public KafkaClient kafkaClient() {
         return new KafkaClient() {
 

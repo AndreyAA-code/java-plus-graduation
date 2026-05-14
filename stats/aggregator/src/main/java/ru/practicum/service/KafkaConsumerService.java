@@ -13,6 +13,10 @@ import ru.practicum.ewm.stats.avro.UserActionAvro;
 import ru.practicum.processor.UserActionProcessor;
 
 import java.time.Duration;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
+import java.util.concurrent.TimeUnit;
+import java.util.concurrent.atomic.AtomicBoolean;
 
 @Slf4j
 @Service
@@ -21,19 +25,18 @@ public class KafkaConsumerService {
 
     private final UserActionConsumer consumer;
     private final UserActionProcessor processor;
-    private volatile boolean running = true;
+    private final ExecutorService executorService = Executors.newSingleThreadExecutor();
+    private AtomicBoolean running = new AtomicBoolean(true);
 
     @PostConstruct
     public void start() {
         consumer.subscribe();
-        Thread consumerThread = new Thread(this::consume);
-        consumerThread.setName("kafka-consumer-thread");
-        consumerThread.start();
-        log.info("Kafka consumer thread started");
+        executorService.submit(this::consume);
+        log.info("Kafka consumer service started with ExecutorService");
     }
 
     private void consume() {
-        while (running) {
+        while (running.get()) {
             try {
                 ConsumerRecords<Long, SpecificRecordBase> records = consumer.poll(Duration.ofMillis(1000));
                 for (ConsumerRecord<Long, SpecificRecordBase> record : records) {
@@ -41,15 +44,29 @@ public class KafkaConsumerService {
                     processor.processUserAction(userAction);
                 }
             } catch (Exception e) {
-                log.error("Error consuming messages", e);
+                if (running.get()) {
+                    log.error("Error consuming messages", e);
+                }
             }
         }
     }
 
     @PreDestroy
     public void stop() {
-        running = false;
+        running.set(false);
         consumer.wakeup();
+
+        executorService.shutdown();
+        try {
+            if (!executorService.awaitTermination(30, TimeUnit.SECONDS)) {
+                log.warn("ExecutorService did not terminate in time, forcing shutdown");
+                executorService.shutdownNow();
+            }
+        } catch (InterruptedException e) {
+            log.error("Interrupted while waiting for executor termination", e);
+            executorService.shutdownNow();
+            Thread.currentThread().interrupt();
+        }
         consumer.close();
         log.info("Kafka consumer stopped");
     }

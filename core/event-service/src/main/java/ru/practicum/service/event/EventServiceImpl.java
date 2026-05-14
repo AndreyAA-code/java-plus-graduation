@@ -13,6 +13,7 @@ import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.client.ResourceAccessException;
 import ru.practicum.api.LocationFeignClient;
 import ru.practicum.api.UserFeignClient;
+import ru.practicum.client.AnalyzerClient;
 import ru.practicum.client.StatsClient;
 import ru.practicum.dto.EndpointHitDto;
 import ru.practicum.dto.ViewStatsDto;
@@ -20,6 +21,8 @@ import ru.practicum.dto.event.event.*;
 import ru.practicum.dto.locations.LocationResponseDto;
 import ru.practicum.dto.user.UserShortDto;
 import ru.practicum.errors.ConflictException;
+import ru.practicum.ewm.stats.proto.RecommendedEventProto;
+import ru.practicum.ewm.stats.proto.UserPredictionsRequestProto;
 import ru.practicum.mapper.EventMapper;
 import ru.practicum.models.Category;
 import ru.practicum.models.Event;
@@ -34,6 +37,7 @@ import java.time.LocalDateTime;
 import java.util.*;
 import java.util.function.Function;
 import java.util.stream.Collectors;
+import java.util.stream.Stream;
 
 @Slf4j
 @RequiredArgsConstructor
@@ -46,6 +50,7 @@ public class EventServiceImpl implements EventService {
     private final LocationFeignClient locationFeignClient;
     private final StatsClient statsClient;
     private final UserFeignClient userFeignClient;
+    private final AnalyzerClient analyzerClient;
 
     @Override
     @Transactional
@@ -389,6 +394,36 @@ public class EventServiceImpl implements EventService {
                 .collect(Collectors.toMap(Event::getId, Function.identity()));
 
         return ids.stream()
+                .filter(eventMap::containsKey)
+                .map(eventMap::get)
+                .map(event -> mapper.eventToShortEventResponseDto(event, null))
+                .collect(Collectors.toList());
+    }
+
+    @Override
+    public List<ShortEventResponseDto> getRecommendations(Long userId, int maxResults) {
+        UserPredictionsRequestProto request = UserPredictionsRequestProto.newBuilder()
+                .setUserId(userId)
+                .setMaxResults(maxResults)
+                .build();
+
+        Stream<RecommendedEventProto> recommendations = analyzerClient.getRecommendationsForUser(request);
+
+        List<Long> recommendedEventIds = recommendations
+                .map(RecommendedEventProto::getEventId)
+                .collect(Collectors.toList());
+
+        if (recommendedEventIds.isEmpty()) {
+            return List.of();
+        }
+
+        List<Event> events = eventRepository.findAllById(recommendedEventIds);
+
+        // Сохраняем порядок, соответствующий recommendedEventIds
+        Map<Long, Event> eventMap = events.stream()
+                .collect(Collectors.toMap(Event::getId, Function.identity()));
+
+        return recommendedEventIds.stream()
                 .filter(eventMap::containsKey)
                 .map(eventMap::get)
                 .map(event -> mapper.eventToShortEventResponseDto(event, null))
