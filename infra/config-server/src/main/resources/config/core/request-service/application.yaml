@@ -22,3 +22,9 @@ spring:
       hibernate:
         default_schema: request
         format_sql: true
+
+grpc:
+  client:
+    collector:
+      address: discovery:///COLLECTOR
+      negotiationType: plaintext

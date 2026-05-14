@@ -1,0 +1,16 @@
+kafka:
+  bootstrap:
+    servers: localhost:9092
+  topics:
+    stats-user-action-v1: stats.user-actions.v1
+
+grpc:
+  server:
+    port: 0
+
+logging:
+  level:
+    ru.practicum: DEBUG
+
+server:
+  port: 0

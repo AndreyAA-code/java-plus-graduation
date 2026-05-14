@@ -22,6 +22,7 @@ CREATE TABLE IF NOT EXISTS events.events (
     category_id BIGINT REFERENCES events.categories,
     initiator_id BIGINT,
     confirmed_requests INTEGER,
+    rating DOUBLE PRECISION NOT NULL,
     CONSTRAINT chk_status CHECK (state IN ('PENDING', 'REJECTED', 'PUBLISHED', 'CANCELED'))
 );
 

@@ -13,26 +13,31 @@ import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.client.ResourceAccessException;
 import ru.practicum.api.LocationFeignClient;
 import ru.practicum.api.UserFeignClient;
+import ru.practicum.client.AnalyzerClient;
+import ru.practicum.client.StatsClient;
 import ru.practicum.dto.EndpointHitDto;
 import ru.practicum.dto.ViewStatsDto;
 import ru.practicum.dto.event.event.*;
 import ru.practicum.dto.locations.LocationResponseDto;
 import ru.practicum.dto.user.UserShortDto;
 import ru.practicum.errors.ConflictException;
+import ru.practicum.ewm.stats.proto.RecommendedEventProto;
+import ru.practicum.ewm.stats.proto.UserPredictionsRequestProto;
 import ru.practicum.mapper.EventMapper;
 import ru.practicum.models.Category;
 import ru.practicum.models.Event;
 import ru.practicum.models.QEvent;
 import ru.practicum.repository.CategoryRepository;
 import ru.practicum.repository.EventRepository;
-import ru.practicum.stats.client.StatsClient;
 import ru.practicum.util.EventState;
 import ru.practicum.util.EventStateAction;
 
 
 import java.time.LocalDateTime;
 import java.util.*;
+import java.util.function.Function;
 import java.util.stream.Collectors;
+import java.util.stream.Stream;
 
 @Slf4j
 @RequiredArgsConstructor
@@ -45,6 +50,7 @@ public class EventServiceImpl implements EventService {
     private final LocationFeignClient locationFeignClient;
     private final StatsClient statsClient;
     private final UserFeignClient userFeignClient;
+    private final AnalyzerClient analyzerClient;
 
     @Override
     @Transactional
@@ -381,16 +387,47 @@ public class EventServiceImpl implements EventService {
         eventRepository.save(event);
     }
 
-    private UserShortDto findUser(Long userId) {
-        try {
-            return userFeignClient.getUserById(userId);
-        } catch (Exception e) {
-            log.error("Failed to fetch user with id {}: {}. Returning default user.", userId, e.getMessage());
-            UserShortDto defaultUser = new UserShortDto();
-            defaultUser.setId(userId);
-            defaultUser.setName("Default User");
-            return defaultUser;
+    @Override
+    public List<ShortEventResponseDto> findAllById(List<Long> ids) {
+        List<Event> events = eventRepository.findAllById(ids);
+        Map<Long, Event> eventMap = events.stream()
+                .collect(Collectors.toMap(Event::getId, Function.identity()));
+
+        return ids.stream()
+                .filter(eventMap::containsKey)
+                .map(eventMap::get)
+                .map(event -> mapper.eventToShortEventResponseDto(event, null))
+                .collect(Collectors.toList());
+    }
+
+    @Override
+    public List<ShortEventResponseDto> getRecommendations(Long userId, int maxResults) {
+        UserPredictionsRequestProto request = UserPredictionsRequestProto.newBuilder()
+                .setUserId(userId)
+                .setMaxResults(maxResults)
+                .build();
+
+        Stream<RecommendedEventProto> recommendations = analyzerClient.getRecommendationsForUser(request);
+
+        List<Long> recommendedEventIds = recommendations
+                .map(RecommendedEventProto::getEventId)
+                .collect(Collectors.toList());
+
+        if (recommendedEventIds.isEmpty()) {
+            return List.of();
         }
+
+        List<Event> events = eventRepository.findAllById(recommendedEventIds);
+
+        // Сохраняем порядок, соответствующий recommendedEventIds
+        Map<Long, Event> eventMap = events.stream()
+                .collect(Collectors.toMap(Event::getId, Function.identity()));
+
+        return recommendedEventIds.stream()
+                .filter(eventMap::containsKey)
+                .map(eventMap::get)
+                .map(event -> mapper.eventToShortEventResponseDto(event, null))
+                .collect(Collectors.toList());
     }
 
     private Event findEvent(Long eventId) {
@@ -438,7 +475,7 @@ public class EventServiceImpl implements EventService {
     private void sendHit(Long eventId, HttpServletRequest request) {
         try {
             EndpointHitDto hit = EndpointHitDto.builder()
-                    .app("event-service")  // важно: правильное имя сервиса
+                    .app("event-service")
                     .uri("/events/" + eventId)
                     .ip(request.getRemoteAddr())
                     .timestamp(LocalDateTime.now())
@@ -448,6 +485,18 @@ public class EventServiceImpl implements EventService {
             log.info("Hit sent for event {}", eventId);
         } catch (Exception e) {
             log.error("Failed to send hit for event {}: {}", eventId, e.getMessage());
+        }
+    }
+
+    private UserShortDto findUser(Long userId) {
+        try {
+            return userFeignClient.getUserById(userId);
+        } catch (Exception e) {
+            log.warn("User not found: {}, creating default", userId);
+            UserShortDto userDto = new UserShortDto();
+            userDto.setId(userId);
+            userDto.setName("User " + userId);
+            return userDto;
         }
     }
 }

@@ -8,17 +8,20 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Sort;
 import org.springframework.http.HttpStatus;
+import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
-import ru.practicum.dto.EndpointHitDto;
+import ru.practicum.client.AnalyzerClient;
 import ru.practicum.dto.event.event.EventResponseDto;
 import ru.practicum.dto.event.event.EventSearchCriteria;
 import ru.practicum.dto.event.event.ShortEventResponseDto;
+import ru.practicum.event.service.CollectorActionService;
+import ru.practicum.ewm.stats.proto.RecommendedEventProto;
+import ru.practicum.ewm.stats.proto.UserPredictionsRequestProto;
 import ru.practicum.service.event.EventService;
-import ru.practicum.stats.client.StatsClient;
 
-
-import java.time.LocalDateTime;
 import java.util.List;
+import java.util.stream.Collectors;
+import java.util.stream.Stream;
 
 @Slf4j
 @RestController
@@ -26,17 +29,15 @@ import java.util.List;
 @RequiredArgsConstructor
 public class PublicEventsController {
 
-    private static final String MAIN_SERVICE = "event-service";
-
     private final EventService service;
-    private final StatsClient statsClient;
+    private final CollectorActionService collectorActionService;
+    private final AnalyzerClient analyzerClient;
 
     @GetMapping
     @ResponseStatus(HttpStatus.OK)
     public List<ShortEventResponseDto> findAll(@ModelAttribute EventSearchCriteria criteria, HttpServletRequest req) throws Exception {
        log.info("Find all events");
        List<ShortEventResponseDto> res = service.find(criteria);
-       saveHit(req);
        return res;
     }
 
@@ -45,10 +46,19 @@ public class PublicEventsController {
     public EventResponseDto getEvent(@PathVariable Long id, HttpServletRequest req) {
         log.info("Get event by id {}", id);
         EventResponseDto res = service.get(id, req);
+        
+        String userIdHeader = req.getHeader("X-EWM-USER-ID");
+        if (userIdHeader != null) {
+            try {
+                long userId = Long.parseLong(userIdHeader);
+                collectorActionService.sendView(userId, id);
+            } catch (NumberFormatException e) {
+                log.warn("Invalid user ID header: {}", userIdHeader);
+            }
+        }
         return res;
     }
 
-    //!!!!!!!!FEATURE - 3 ЗАДАНИЕ
     @GetMapping("/location/{locationId}")
     @ResponseStatus(HttpStatus.OK)
     public List<ShortEventResponseDto> findEventsByLocation(@PathVariable Long locationId,
@@ -57,9 +67,7 @@ public class PublicEventsController {
                                                       HttpServletRequest req) {
 
         log.info("Find events by location {}", locationId);
-        saveHit(req);
         return service.findEventsByLocation(locationId, PageRequest.of(from / size, size, Sort.by("event_date").descending()));
-
     }
 
     @GetMapping("/near")
@@ -76,15 +84,21 @@ public class PublicEventsController {
         return service.findEventsNear(lat, lon, radius,
                 PageRequest.of(from / size, size, Sort.by("event_date").descending()));
     }
-    //!!!!!!!!FEATURE - 3 ЗАДАНИЕ
 
-
-    private void saveHit(HttpServletRequest request) {
-        EndpointHitDto endpointHitDto = new EndpointHitDto();
-        endpointHitDto.setApp("event-service");
-        endpointHitDto.setUri(request.getRequestURI());
-        endpointHitDto.setIp(request.getRemoteAddr());
-        endpointHitDto.setTimestamp(LocalDateTime.now());
-        statsClient.hit(endpointHitDto);
+    @PutMapping("/{eventId}/like")
+    public ResponseEntity<Void> likeEvent(@PathVariable long eventId,
+                                          @RequestHeader("X-EWM-USER-ID") long userId) {
+        log.info("Like event {} from user {}", eventId, userId);
+        collectorActionService.sendLike(userId, eventId);
+        return ResponseEntity.ok().build();
     }
+
+    @GetMapping("/recommendations")
+    public List<ShortEventResponseDto> getRecommendations(@RequestHeader("X-EWM-USER-ID") Long userId,
+                                                          @RequestParam(defaultValue = "10") int maxResults) {
+        log.info("Get recommendations for user {}", userId);
+        return service.getRecommendations(userId, maxResults);
+    }
+
+
 }

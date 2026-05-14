@@ -1,0 +1,52 @@
+spring:
+  application:
+    name: analyzer
+  sql:
+    init:
+      mode: always
+      schema-locations: classpath:schema.sql
+  datasource:
+    url: jdbc:postgresql://localhost:6541/stats
+    username: stats
+    password: stats
+    driver-class-name: org.postgresql.Driver
+  jpa:
+    defer-datasource-initialization: true
+    hibernate:
+      ddl-auto: none
+    database-platform: org.hibernate.dialect.PostgreSQLDialect
+    properties:
+      hibernate:
+        default_schema: analyzer
+        format_sql: true
+  kafka:
+    bootstrap-servers: ${kafka.bootstrap.servers:localhost:9092}
+    consumer:
+      key-deserializer: org.apache.kafka.common.serialization.LongDeserializer
+      value-deserializer: ru.practicum.deserializer.UserActionAvroDeserializer
+      group-id: stats.analyzer.action
+      auto-offset-reset: latest
+
+kafka:
+  bootstrap:
+    servers: localhost:9092
+  consumer:
+    group:
+      action: stats.analyzer.action
+      similarity: stats.analyzer.similarity
+    poll:
+      timeout: 100
+  topics:
+    stats-user-action-v1: stats.user-actions.v1
+    stats-events-similarity-v1: stats.events-similarity.v1
+
+grpc:
+  server:
+    port: 0
+
+server:
+  port: 0
+
+logging:
+  level:
+    ru.practicum: DEBUG
